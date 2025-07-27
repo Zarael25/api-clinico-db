@@ -1,0 +1,42 @@
+{
+  "name": "api-clinico-db",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "tsc --noEmit && eslint \"src/**/*.ts*\"",
+    "start": "pnpm run start:server",
+    "dev": "dotenv -- nodemon --exec \"node -r esbuild-register ./server.ts\" -e .ts",
+    "start:server": "NODE_ENV=development DEBUG=clinico-api*,app:*,error:* nodemon server.ts",
+    "start:serverw": "SET NODE_ENV=development & SET DEBUG=clinico-api*,app:*,error:* & nodemon server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1",
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/boom": "^7.3.5",
+    "@types/cors": "^2.8.19",
+    "@types/debug": "^4.1.12",
+    "@types/express": "^5.0.3",
+    "@types/helmet": "^4.0.0",
+    "@types/morgan": "^1.9.10",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.3",
+    "globals": "^16.3.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0"
+  },
+  "dependencies": {
+    "boom": "^7.3.0",
+    "cors": "^2.8.5",
+    "debug": "^4.4.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1"
+  }
+}
