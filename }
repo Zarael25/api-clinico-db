@@ -1,6 +1,6 @@
 import Debug from 'debug'
 
-import app from './src/app'
+import app from './app'
 
 const debug = Debug('app:server')
 const port = app.get('port')

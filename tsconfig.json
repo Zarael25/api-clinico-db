@@ -1,17 +1,25 @@
 {
-  "display": "Default",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "rootDir": "src",
+    "outDir": "build",
+
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "build",
-    "rootDir": "src",
+
     "strict": true,
+    "noImplicitAny": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true
+
+    /*"typeRoots": ["./src/types", "./node_modules/@types"]*/
   },
-  "include": ["src", "./server.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "build", "mongo_data"]
 }

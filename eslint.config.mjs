@@ -1,6 +1,7 @@
 import tseslint from 'typescript-eslint'
 import pluginJs from '@eslint/js'
 import prettier from 'eslint-config-prettier/flat'
+import eslintPluginPrettier from 'eslint-plugin-prettier'
 import globals from 'globals'
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
@@ -28,7 +29,7 @@ export default [
       },
     },
     plugins: {
-      prettier: await import('eslint-plugin-prettier'),
+      prettier: eslintPluginPrettier,
     },
     files: ['**/*.{js,mjs,cjs,ts}'],
     rules: {

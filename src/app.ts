@@ -39,12 +39,12 @@ const options: cors.CorsOptions = {
   exposedHeaders: 'Authorization, Content-Disposition',
   origin: (
     origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void,
+    _callback: (_err: Error | null, _allow?: boolean) => void,
   ) => {
     if (whitelist.includes(origin as string) || !origin) {
-      callback(null, true)
+      _callback(null, true)
     } else {
-      callback(new Error('no permitido'))
+      _callback(new Error('no permitido'))
     }
   },
 }
