@@ -1,4 +1,4 @@
-import boom from 'boom'
+import boom from '@hapi/boom'
 import cors from 'cors'
 import express, { Application, json, urlencoded } from 'express'
 import fs from 'fs'
