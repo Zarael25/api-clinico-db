@@ -16,9 +16,10 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
 
-    /*"typeRoots": ["./src/types", "./node_modules/@types"]*/
+    // "typeRoots": ["./src/types", "./node_modules/@types"]*/
+    "typeRoots": ["./src/types"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "build", "mongo_data"]
