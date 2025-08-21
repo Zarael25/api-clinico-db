@@ -1,7 +1,7 @@
 {
   "name": "api-clinico-db",
   "version": "1.0.0",
-  "description": "",
+  "description": "API-REST: para la gestión clínica para la Unidad Educativa Don Bosco Sucre",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write .",
@@ -11,21 +11,44 @@
     "start:server": "NODE_ENV=development DEBUG=clinico-api*,app:*,error:* nodemon src/server.ts",
     "start:serverw": "SET NODE_ENV=development & SET DEBUG=clinico-api*,app:*,error:* & nodemon src/server.ts"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Zarael25/api-clinico-db.git"
+  },
+  "keywords": [
+    "API",
+    "NODE",
+    "TS",
+    "CLINICA",
+    "DON-BOSCO-SUCRE"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Zarael25/api-clinico-db/issues"
+  },
+  "homepage": "https://donboscosucre.edu.bo",
   "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1",
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@types/boom": "^7.3.5",
+    "@types/chalk": "^2.2.4",
     "@types/cors": "^2.8.19",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.3",
+    "@types/inquirer": "^9.0.9",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/minimist": "^1.2.5",
     "@types/morgan": "^1.9.10",
+    "@types/passport": "^1.0.17",
+    "@types/passport-local": "^1.0.38",
+    "chalk": "^5.6.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
     "globals": "^16.3.0",
+    "inquirer": "^12.9.3",
+    "minimist": "^1.2.8",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
@@ -34,6 +57,7 @@
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "debug": "^4.4.1",
     "dotenv": "^17.2.1",
@@ -44,6 +68,7 @@
     "liqe": "^3.8.3",
     "mongoose": "^8.17.1",
     "morgan": "^1.10.1",
+    "passport": "^0.7.0",
     "passport-local": "^1.0.0"
   }
 }
