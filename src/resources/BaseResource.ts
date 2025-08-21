@@ -1,9 +1,11 @@
 import ApiError from '../errors/ApiError'
 
+import type { PaginationResult } from '../types'
+
 function BaseResource<A, E>() {
   return class Resource {
-    instance: A
-    constructor(instance: A | null) {
+    public instance: A
+    public constructor(instance: A | null) {
       if (!instance) {
         throw new ApiError({
           name: 'NOT_FOUND_ERROR',
@@ -15,7 +17,7 @@ function BaseResource<A, E>() {
       this.instance = instance
     }
 
-    item(): E {
+    public item(): E {
       throw new ApiError({
         name: 'METHOD_NOT_IMPLEMENTED',
         message: 'Method item() must be implemented in resource entity class',
@@ -24,7 +26,7 @@ function BaseResource<A, E>() {
       })
     }
 
-    static collection(entities: Array<A>): Array<E> | undefined {
+    public static collection(entities: Array<A>): Array<E> | undefined {
       if (!entities) {
         return
       }
@@ -34,7 +36,7 @@ function BaseResource<A, E>() {
       })
     }
 
-    static paged(
+    public static paged(
       paginatedResult: PaginationResult<A>,
     ): PaginationResult<E> | undefined {
       if (!paginatedResult || !paginatedResult.docs) {

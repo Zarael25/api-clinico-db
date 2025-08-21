@@ -2,8 +2,9 @@ import { NextFunction, Request, Response } from 'express'
 import Joi from 'joi'
 
 import ApiError from '../errors/ApiError'
+import type { ValidationError } from '../types'
+import EnvManager from '../config/EnvManager'
 
-/* eslint-disable max-params */
 export default function errorHandler(
   error: Error,
   req: Request,
@@ -48,7 +49,7 @@ export default function errorHandler(
     })
   }
 
-  if (process.env.NODE_ENV === 'development') {
+  if (EnvManager.getNodeEnv() === 'development') {
     // Manejo para otros tipos de errores
     return res.status(500).json({
       error: {
@@ -59,9 +60,7 @@ export default function errorHandler(
       code_response: 0,
     })
   } else {
-    if (process.env.NODE_ENV !== 'test') {
-      console.log(error)
-    }
+    console.log(error)
 
     res.status(500).json({
       error: {
@@ -74,4 +73,3 @@ export default function errorHandler(
     })
   }
 }
-/* eslint-enable max-params */

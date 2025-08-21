@@ -35,7 +35,7 @@ export default [
     rules: {
       'prefer-const': 'error',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'max-lines': ['warn', { max: 130 }],
+      'max-lines': ['warn', { max: 150 }],
       'max-params': ['error', 4],
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/explicit-member-accessibility': [

@@ -12,16 +12,18 @@ import { parse } from 'liqe'
 import ApiError from '../errors/ApiError'
 import getMongooseWhereClause from '../utils/getMongooseWhereClause'
 
+import type { PagedParams, PaginationResult } from '../types'
+
 export default abstract class BaseRepository<T extends Document> {
-  model: Model<T>
+  public model: Model<T>
   protected allowedSortByFields: Array<string> = ['created_at']
   protected allowedFilterByFields: Array<string> = []
 
-  constructor(model: Model<T>) {
+  public constructor(model: Model<T>) {
     this.model = model
   }
 
-  async getAll(options: Record<string, any> = {}): Promise<Array<T>> {
+  public async getAll(options: Record<string, any> = {}): Promise<Array<T>> {
     const orderBy = this.getOrderBy(options.sortBy)
     delete options.sortBy
     options.sort = orderBy
@@ -42,8 +44,8 @@ export default abstract class BaseRepository<T extends Document> {
       .exec()
   }
 
-  async getPaged(params: PagedParams): Promise<PaginationResult<any> | null> {
-    const { limit, page, sortBy, filterBy } = params
+  public async getPaged(params: PagedParams): Promise<PaginationResult<any>> {
+    const { limit = 10, page = 1, sortBy, filterBy } = params
     const orderBy = this.getOrderBy(sortBy)
     const options: Record<string, any> = { sort: orderBy, filterBy }
 
@@ -89,19 +91,19 @@ export default abstract class BaseRepository<T extends Document> {
     return paginacion
   }
 
-  async getById(
+  public async getById(
     id: string | Types.ObjectId,
     options: QueryOptions = {},
   ): Promise<T | null> {
     return this.model.findById(id, options).exec()
   }
 
-  async create(body: Record<string, any>): Promise<T> {
+  public async create(body: Record<string, any>): Promise<T> {
     await this.validateReferences(body)
     return this.model.create(body)
   }
 
-  async update(
+  public async update(
     id: string | Types.ObjectId,
     body: UpdateQuery<T>,
   ): Promise<T | null> {
@@ -109,7 +111,7 @@ export default abstract class BaseRepository<T extends Document> {
     return this.model.findByIdAndUpdate(id, body, { new: true }).exec()
   }
 
-  async delete(id: string | Types.ObjectId): Promise<T | null> {
+  public async delete(id: string | Types.ObjectId): Promise<T | null> {
     const instance = await this.model.findByIdAndDelete(id).exec() // Cambiamos a findByIdAndDelete para retornar el documento eliminado
     if (!instance) {
       throw new ApiError({

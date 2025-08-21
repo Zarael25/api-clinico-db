@@ -5,20 +5,18 @@ import fs from 'fs'
 import helmet from 'helmet'
 import morgan from 'morgan'
 
-// import EnvManager from './config/EnvManager'
-// import './database/connection'
-/*
+import './database/connection'
+
+import EnvManager from './config/EnvManager'
 import errorHandler from './middlewares/errorHandler'
 import v1 from './routes/v1'
 import passport from 'passport'
 import localStrategy from './routes/v1/auth/localStrategy'
-*/
 
 // App
 const app: Application = express()
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
-// const port = EnvManager.getPort(3000) ?? 3000
-const port = 3000
+const port = EnvManager.getPort() ?? 3000
 
 // Settings
 app.disable('x-powered-by')
@@ -30,8 +28,8 @@ app.use(json())
 app.use(urlencoded({ extended: true }))
 app.use(helmet({ crossOriginResourcePolicy: false }))
 app.use(morgan('dev'))
-// app.use(passport.initialize())
-// passport.use(localStrategy)
+app.use(passport.initialize())
+passport.use(localStrategy)
 
 // Security
 const whitelist: string[] = ['http://localhost:5173', 'http://localhost:3000']
@@ -53,20 +51,22 @@ app.use(cors(options))
 // Redirect
 app.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to my API: Don Bosco Clinico',
+    environment: EnvManager.getNodeEnv(),
     name: app.get('pkg').name,
     version: app.get('pkg').version,
-    /*description: app.get('pkg').description,
+    message: 'Welcome to my API: Don Bosco Clinico',
+    description: app.get('pkg').description,
     repository: app.get('pkg').repository.url,
+    bugs: app.get('pkg').bugs.url,
     license: app.get('pkg').license,
-    author: app.get('pkg').author,
     homepage: app.get('pkg').homepage,
-    environment: process.env.NODE_ENV,*/
+    keywords: app.get('pkg').keywords,
+    // author: app.get('pkg').author,
   })
 })
 
 // API-REST V1
-// app.use('/v1', v1)
+app.use('/v1', v1)
 
 // Verify router
 app.use((req, res) => {
@@ -78,6 +78,6 @@ app.use((req, res) => {
 })
 
 // Error handlers
-// app.use(errorHandler)
+app.use(errorHandler)
 
 export default app
