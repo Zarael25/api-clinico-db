@@ -32,7 +32,12 @@ app.use(passport.initialize())
 passport.use(localStrategy)
 
 // Security
-const whitelist: string[] = ['http://localhost:5173', 'http://localhost:3000']
+const whitelist: string[] = [
+  'http://localhost:5173', 
+  'http://localhost:3000',
+  'http://192.168.1.101:4000'  // <-- tu frontend actual
+]
+
 const options: cors.CorsOptions = {
   exposedHeaders: 'Authorization, Content-Disposition',
   origin: (
