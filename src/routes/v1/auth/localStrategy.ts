@@ -6,6 +6,8 @@ import ApiError from '../../../errors/ApiError'
 
 const localStrategy = new Strategy(
   {
+    usernameField: 'carnet', // <--- aquí le dices que use "carnet"
+    passwordField: 'password',
     session: false,
   },
   async function (carnet, password, done) {

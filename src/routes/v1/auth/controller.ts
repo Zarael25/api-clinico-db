@@ -53,6 +53,7 @@ export const authUsuario = async (
 
         return res.status(200).json({
           message: 'signin successfully',
+          token,
           data: payload,
         })
       } catch (err) {

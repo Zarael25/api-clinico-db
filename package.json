@@ -7,7 +7,8 @@
     "format": "prettier --write .",
     "lint": "tsc --noEmit && eslint \"src/**/*.ts*\"",
     "start": "pnpm run start:server",
-    "dev": "dotenv -- nodemon --exec \"node -r esbuild-register src/server.ts\" -e .ts",
+    "dev:old": "dotenv -- nodemon --exec \"node -r esbuild-register src/server.ts\" -e .ts",
+    "dev": "SET DEBUG=app:server & nodemon --exec \"node -r esbuild-register src/server.ts\" -e .ts",
     "start:server": "NODE_ENV=development DEBUG=clinico-api*,app:*,error:* nodemon src/server.ts",
     "start:serverw": "SET NODE_ENV=development & SET DEBUG=clinico-api*,app:*,error:* & nodemon src/server.ts"
   },
@@ -32,7 +33,6 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@types/boom": "^7.3.5",
-    "@types/chalk": "^2.2.4",
     "@types/cors": "^2.8.19",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.3",
@@ -42,7 +42,8 @@
     "@types/morgan": "^1.9.10",
     "@types/passport": "^1.0.17",
     "@types/passport-local": "^1.0.38",
-    "chalk": "^5.6.0",
+    "chalk": "^4.1.2",
+    "esbuild-register": "^3.6.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",

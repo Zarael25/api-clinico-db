@@ -1,1 +1,4 @@
 esto es el backend
+
+
+pnpm add -D esbuild-register

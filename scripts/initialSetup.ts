@@ -14,7 +14,7 @@ const createAdmin = async () => {
     if (!usuario) {
       // create a new admin user
       await UsuarioModel.create({
-        email: 'admin@donbosco.edu.bo',
+        email: 'admin@donboscosucre.edu.bo',
         password: await bcrypt.hash('D*nB*sco25', 10),
         nombre: 'Juan',
         appaterno: 'Don',
