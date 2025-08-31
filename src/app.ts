@@ -12,6 +12,7 @@ import errorHandler from './middlewares/errorHandler'
 import v1 from './routes/v1'
 import passport from 'passport'
 import localStrategy from './routes/v1/auth/localStrategy'
+import jwtStrategy from './routes/v1/auth/jwtStrategy'
 
 // App
 const app: Application = express()
@@ -30,6 +31,7 @@ app.use(helmet({ crossOriginResourcePolicy: false }))
 app.use(morgan('dev'))
 app.use(passport.initialize())
 passport.use(localStrategy)
+passport.use(jwtStrategy)
 
 // Security
 const whitelist: string[] = [
