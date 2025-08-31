@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
-import { Schema, model, Document } from 'mongoose'
+import { Schema, Document } from 'mongoose'
+import { connUsuarios } from '../connection'
 
 export const ROLES = [
   'admin',
@@ -139,5 +140,5 @@ const UsuarioSchema = new Schema<UsuarioAttributes>(
   },
 )
 
-const Usuario = model<UsuarioAttributes>('Usuario', UsuarioSchema)
+const Usuario = connUsuarios.model<UsuarioAttributes>('Usuario', UsuarioSchema)
 export default Usuario

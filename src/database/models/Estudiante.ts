@@ -1,5 +1,6 @@
 // models/Estudiante.ts
-import { Schema, model, Document, Types } from 'mongoose'
+import { Schema, model, Document } from 'mongoose'
+import { connEstudiantes } from '../connection'
 
 export type GestionEntity = {
   gestion: number
@@ -19,9 +20,13 @@ export type TutorEntity = {
 export type EstudianteEntity = {
   id?: string | any
 
-  user: Types.ObjectId
-  rUde: string
-  codigoBanco: string
+  nombre: string
+  appaterno: string
+  apmaterno?: string
+  carnet: string
+
+  rude: string
+  codigoBanco?: string
   estadoInscripcion: string
   estadoPago: boolean
   estadoRecepcion: boolean
@@ -55,35 +60,22 @@ const TutorSchema = new Schema<TutorEntity>(
 
 const EstudianteSchema = new Schema<EstudianteAttributes>(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'Usuario',
-      required: true,
-    },
-    rUde: {
-      type: String,
-      uppercase: true,
-      trim: true,
-      required: true,
-    },
-    codigoBanco: {
-      type: String,
-      trim: true,
-    },
+    nombre: { type: String, uppercase: true, trim: true, required: true },
+    appaterno: { type: String, uppercase: true, trim: true, required: true },
+    apmaterno: { type: String, uppercase: true, trim: true },
+    carnet: { type: String, uppercase: true, trim: true, required: true },
+
+    rude: { type: String, uppercase: true, trim: true, required: true, unique: true },
+    codigoBanco: { type: String, uppercase: true, trim: true },
     estadoInscripcion: {
       type: String,
       enum: ['INSCRITO', 'NO_INSCRITO', 'PENDIENTE'],
       default: 'PENDIENTE',
       trim: true,
     },
-    estadoPago: {
-      type: Boolean,
-      default: false,
-    },
-    estadoRecepcion: {
-      type: Boolean,
-      default: false,
-    },
+    estadoPago: { type: Boolean, default: false },
+    estadoRecepcion: { type: Boolean, default: false },
+
     gestiones: [GestionSchema],
     tutores: [TutorSchema],
   },
@@ -93,5 +85,9 @@ const EstudianteSchema = new Schema<EstudianteAttributes>(
   },
 )
 
-const Estudiante = model<EstudianteAttributes>('Estudiante', EstudianteSchema)
+// Index RUDE para búsquedas rápidas
+EstudianteSchema.index({ rude: 1 }, { unique: true })
+
+// 👇 Usamos la conexión de estudiantes
+const Estudiante = connEstudiantes.model<EstudianteAttributes>('Estudiante', EstudianteSchema)
 export default Estudiante
