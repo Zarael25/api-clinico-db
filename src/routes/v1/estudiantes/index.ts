@@ -14,7 +14,7 @@ estudiantes.get(
 
 // Buscador avanzado
 estudiantes.get(
-  '/buscar',
+  '/buscar/',
   passport.authenticate('jwt', { session: false }),
   searchEstudiantes
 )
