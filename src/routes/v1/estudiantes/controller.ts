@@ -70,3 +70,32 @@ export const getEstudianteById = async (req: Request, res: Response, next: NextF
     next(err)
   }
 }
+
+
+
+// 📌 Obtener todos los tutores de un estudiante
+export const getTutoresByEstudiante = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params
+
+    // Solo traemos el campo tutores
+    const estudiante = await Estudiante.findById(id).select('tutores').lean()
+
+    if (!estudiante) {
+      return res.status(404).json({
+        message: 'Estudiante no encontrado',
+      })
+    }
+
+    return res.json({
+      count: estudiante.tutores?.length || 0,
+      data: estudiante.tutores || [],
+    })
+  } catch (err) {
+    next(err)
+  }
+}
