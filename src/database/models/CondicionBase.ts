@@ -1,4 +1,5 @@
 import { Schema, model, Document, Types } from 'mongoose'
+import { connUsuarios } from '../connection'
 
 export type AlergiaEntity = {
   alergia: string
@@ -11,7 +12,7 @@ export type VacunaEntity = {
 export type CondicionBaseEntity = {
   id?: string | any
 
-  estudiante: Types.ObjectId
+  estudiante: Types.ObjectId // referencia al estudiante
   condicion: string
 
   alergias?: AlergiaEntity[]
@@ -56,8 +57,9 @@ const CondicionBaseSchema = new Schema<CondicionBaseAttributes>(
   },
 )
 
-const CondicionBase = model<CondicionBaseAttributes>(
+const CondicionBase = connUsuarios.model<CondicionBaseAttributes>(
   'CondicionBase',
-  CondicionBaseSchema,
+  CondicionBaseSchema
 )
+
 export default CondicionBase
