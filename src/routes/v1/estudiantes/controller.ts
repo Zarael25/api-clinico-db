@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express'
 import Estudiante from '../../../database/models/Estudiante'
 
+
 export const getEstudiantes = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const estudiantes = await Estudiante.find().lean()
@@ -45,6 +46,26 @@ export const searchEstudiantes = async (req: Request, res: Response, next: NextF
       count: estudiantes.length,
       data: estudiantes,
     })
+  } catch (err) {
+    next(err)
+  }
+}
+
+
+// 📌 Obtener estudiante por ID
+export const getEstudianteById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params
+
+    const estudiante = await Estudiante.findById(id).lean()
+
+    if (!estudiante) {
+      return res.status(404).json({
+        message: 'Estudiante no encontrado',
+      })
+    }
+
+    return res.json(estudiante)
   } catch (err) {
     next(err)
   }
