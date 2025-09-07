@@ -4,7 +4,9 @@ import {
   createOrUpdateCondicionBase,
   getCondicionBaseByEstudiante,
   updateCondicionBase,
-  updateSoloCondicion
+  updateSoloCondicion,
+  getAlergiasByEstudiante,
+  updateAlergias,
 } from './controller'
 
 const condicionBase: Router = express.Router()
@@ -30,12 +32,28 @@ condicionBase.patch(
   updateCondicionBase
 )
 
+// Editar condición base
 condicionBase.patch(
   "/:estudianteId/condicion",
   passport.authenticate("jwt", { session: false }),
   updateSoloCondicion
 )
 
+
+// Obtener solo alergias de un estudiante
+condicionBase.get(
+  '/:estudianteId/alergias',
+  passport.authenticate('jwt', { session: false }),
+  getAlergiasByEstudiante
+)
+
+
+// Reemplazar todas las alergias
+condicionBase.put(
+  '/:estudianteId/alergias',
+  passport.authenticate('jwt', { session: false }),
+  updateAlergias
+)
 
 
 export default condicionBase

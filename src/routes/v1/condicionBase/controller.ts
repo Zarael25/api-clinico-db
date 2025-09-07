@@ -98,3 +98,67 @@ export const updateSoloCondicion = async (
     next(err)
   }
 }
+
+
+
+
+// 📌 Obtener solo las alergias de un estudiante
+export const getAlergiasByEstudiante = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { estudianteId } = req.params
+
+    const condicionBase = await CondicionBase.findOne({ estudiante: estudianteId })
+      .select('alergias -_id') // 👈 solo trae el campo alergias, sin _id
+      .lean()
+
+    if (!condicionBase) {
+      return res.status(404).json({ message: 'Condición base no encontrada' })
+    }
+
+    res.json(condicionBase.alergias || [])
+  } catch (err) {
+    next(err)
+  }
+}
+
+
+
+// Reemplazar todas las alergias de un estudiante (limpiando vacías)
+export const updateAlergias = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { estudianteId } = req.params
+    let { alergias } = req.body // 👈 { "alergias": [{ "alergia": "Polvo" }] }
+
+    if (!Array.isArray(alergias)) {
+      return res.status(400).json({ message: "Debe enviar un array de alergias" })
+    }
+
+    // 🔎 Filtrar vacías
+    const alergiasLimpias = alergias.filter(
+      (a: any) => a.alergia && a.alergia.trim() !== ""
+    )
+
+    // 👇 Guardar reemplazando toda la lista
+    const condicionBase = await CondicionBase.findOneAndUpdate(
+      { estudiante: estudianteId },
+      { $set: { alergias: alergiasLimpias } },
+      { new: true, upsert: true }
+    ).lean()
+
+    if (!condicionBase) {
+      return res.status(404).json({ message: "Condición base no encontrada" })
+    }
+
+    res.status(200).json(condicionBase)
+  } catch (err) {
+    next(err)
+  }
+}
