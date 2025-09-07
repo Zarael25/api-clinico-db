@@ -46,7 +46,7 @@ const CondicionBaseSchema = new Schema<CondicionBaseAttributes>(
       type: String,
       uppercase: true,
       trim: true,
-      required: true,
+      required: false,
     },
     alergias: [AlergiaSchema],
     vacunas: [VacunaSchema],
