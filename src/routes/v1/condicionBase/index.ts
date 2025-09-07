@@ -7,6 +7,8 @@ import {
   updateSoloCondicion,
   getAlergiasByEstudiante,
   updateAlergias,
+  getVacunasByEstudiante,
+  updateVacunas,
 } from './controller'
 
 const condicionBase: Router = express.Router()
@@ -54,6 +56,22 @@ condicionBase.put(
   passport.authenticate('jwt', { session: false }),
   updateAlergias
 )
+
+// Obtener solo vacunas
+condicionBase.get(
+  '/:estudianteId/vacunas',
+  passport.authenticate('jwt', { session: false }),
+  getVacunasByEstudiante
+)
+
+// Reemplazar todas las vacunas
+condicionBase.put(
+  '/:estudianteId/vacunas',
+  passport.authenticate('jwt', { session: false }),
+  updateVacunas
+)
+
+
 
 
 export default condicionBase

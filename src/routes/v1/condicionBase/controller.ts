@@ -162,3 +162,67 @@ export const updateAlergias = async (
     next(err)
   }
 }
+
+
+
+
+// Obtener solo las vacunas de un estudiante
+export const getVacunasByEstudiante = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { estudianteId } = req.params
+
+    const condicionBase = await CondicionBase.findOne({ estudiante: estudianteId })
+      .select('vacunas -_id') // 👈 solo trae el campo vacunas, sin _id
+      .lean()
+
+    if (!condicionBase) {
+      return res.status(404).json({ message: 'Condición base no encontrada' })
+    }
+
+    res.json(condicionBase.vacunas || [])
+  } catch (err) {
+    next(err)
+  }
+}
+
+
+
+// Reemplazar todas las vacunas de un estudiante (limpiando vacías)
+export const updateVacunas = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { estudianteId } = req.params
+    let { vacunas } = req.body // 👈 { "vacunas": [{ "vacuna": "Influenza 2024" }] }
+
+    if (!Array.isArray(vacunas)) {
+      return res.status(400).json({ message: "Debe enviar un array de vacunas" })
+    }
+
+    // 🔎 Filtrar vacías
+    const vacunasLimpias = vacunas.filter(
+      (v: any) => v.vacuna && v.vacuna.trim() !== ""
+    )
+
+    // 👇 Guardar reemplazando toda la lista
+    const condicionBase = await CondicionBase.findOneAndUpdate(
+      { estudiante: estudianteId },
+      { $set: { vacunas: vacunasLimpias } },
+      { new: true, upsert: true }
+    ).lean()
+
+    if (!condicionBase) {
+      return res.status(404).json({ message: "Condición base no encontrada" })
+    }
+
+    res.status(200).json(condicionBase)
+  } catch (err) {
+    next(err)
+  }
+}
