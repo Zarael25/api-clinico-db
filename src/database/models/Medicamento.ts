@@ -1,5 +1,6 @@
 // models/Medicamento.ts
 import { Schema, model, Document } from 'mongoose'
+import { connUsuarios } from '../connection'
 
 export type MedicamentoEntity = {
   id?: string | any
@@ -41,7 +42,7 @@ const MedicamentoSchema = new Schema<MedicamentoAttributes>(
   },
 )
 
-const Medicamento = model<MedicamentoAttributes>(
+const Medicamento = connUsuarios.model<MedicamentoAttributes>(
   'Medicamento',
   MedicamentoSchema,
 )

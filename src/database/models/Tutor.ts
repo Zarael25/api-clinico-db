@@ -1,5 +1,6 @@
 // models/Tutor.ts
 import { Schema, model, Document, Types } from 'mongoose'
+import { connUsuarios } from '../connection'
 
 export type TutorEntity = {
   id?: string | any
@@ -66,5 +67,6 @@ const TutorSchema = new Schema<TutorAttributes>(
   },
 )
 
-const Tutor = model<TutorAttributes>('Tutor', TutorSchema)
+const Tutor = connUsuarios.model<TutorAttributes>('Tutor', TutorSchema)
+
 export default Tutor

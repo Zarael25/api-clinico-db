@@ -1,5 +1,6 @@
 // models/AtencionMedica.ts
 import { Schema, model, Document, Types } from 'mongoose'
+import { connUsuarios } from '../connection'  // 👈 importa tu conexión correcta
 
 export type MedicamentoAdministradoEntity = {
   medicamento: Types.ObjectId
@@ -97,8 +98,9 @@ const AtencionMedicaSchema = new Schema<AtencionMedicaAttributes>(
   },
 )
 
-const AtencionMedica = model<AtencionMedicaAttributes>(
+const AtencionMedica = connUsuarios.model<AtencionMedicaAttributes>(
   'AtencionMedica',
   AtencionMedicaSchema,
 )
+
 export default AtencionMedica
