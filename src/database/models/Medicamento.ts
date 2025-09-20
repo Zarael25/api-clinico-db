@@ -4,8 +4,8 @@ import { Schema, model, Document } from 'mongoose'
 export type MedicamentoEntity = {
   id?: string | any
 
-  nombreComercial: string
-  nombreGenerico: string
+  nombre_comercial: string
+  nombre_generico: string
   presentacion: string
 
   createdAt?: Date
@@ -16,13 +16,13 @@ export interface MedicamentoAttributes extends MedicamentoEntity, Document {}
 
 const MedicamentoSchema = new Schema<MedicamentoAttributes>(
   {
-    nombreComercial: {
+    nombre_comercial: {
       type: String,
       uppercase: true,
       trim: true,
       required: true,
     },
-    nombreGenerico: {
+    nombre_generico: {
       type: String,
       uppercase: true,
       trim: true,

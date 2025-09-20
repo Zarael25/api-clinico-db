@@ -1,5 +1,5 @@
 // models/Tutor.ts
-import { Schema, model, Document } from 'mongoose'
+import { Schema, model, Document, Types } from 'mongoose'
 
 export type TutorEntity = {
   id?: string | any
@@ -10,6 +10,9 @@ export type TutorEntity = {
   lugarTrabajo?: string
   parentesco: string
   celular: string
+
+  // 🔗 relación con estudiantes
+  estudiantes?: Types.ObjectId[]
 }
 
 export interface TutorAttributes extends TutorEntity, Document {}
@@ -50,6 +53,12 @@ const TutorSchema = new Schema<TutorAttributes>(
       type: String,
       trim: true,
     },
+    estudiantes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Estudiante', // 🔗 referencia a la colección de estudiantes
+      },
+    ],
   },
   {
     timestamps: true,

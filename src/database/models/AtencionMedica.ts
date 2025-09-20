@@ -4,7 +4,6 @@ import { Schema, model, Document, Types } from 'mongoose'
 export type MedicamentoAdministradoEntity = {
   medicamento: Types.ObjectId
   dosis: string
-  frecuencia: string
   via: string
 }
 
@@ -13,10 +12,11 @@ export type AtencionMedicaEntity = {
 
   estudiante: Types.ObjectId
   user: Types.ObjectId // el profesional que atiende (Usuario)
-  motivo: string
+  fecha: Date
+  motivo_consulta: string
   diagnostico: string
   tratamiento: string
-  observaciones?: string
+  sugerir_baja: boolean
 
   medicamentosAdministrados?: MedicamentoAdministradoEntity[]
 
@@ -36,11 +36,6 @@ const MedicamentoAdministradoSchema = new Schema<MedicamentoAdministradoEntity>(
       required: true,
     },
     dosis: {
-      type: String,
-      trim: true,
-      required: true,
-    },
-    frecuencia: {
       type: String,
       trim: true,
       required: true,
@@ -68,7 +63,11 @@ const AtencionMedicaSchema = new Schema<AtencionMedicaAttributes>(
       ref: 'Usuario',
       required: true,
     },
-    motivo: {
+    fecha: {
+      type: Date,
+      default: Date.now,
+    },
+    motivo_consulta: {
       type: String,
       uppercase: true,
       trim: true,
@@ -86,10 +85,9 @@ const AtencionMedicaSchema = new Schema<AtencionMedicaAttributes>(
       trim: true,
       required: true,
     },
-    observaciones: {
-      type: String,
-      uppercase: true,
-      trim: true,
+    sugerir_baja: {
+      type: Boolean,
+      default: false,
     },
     medicamentosAdministrados: [MedicamentoAdministradoSchema],
   },
