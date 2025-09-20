@@ -25,3 +25,41 @@ export const createAtencionMedica = async (req: Request, res: Response, next: Ne
     next(err)
   }
 }
+
+
+// 📌 Listar atenciones de un estudiante
+export const getAtencionesByEstudiante = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { estudianteId } = req.params
+
+    const atenciones = await AtencionMedica.find({ estudiante: estudianteId })
+      .populate('user', 'nombre correo') // solo campos básicos del profesional
+      .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
+      .sort({ fecha: -1 }) // más recientes primero
+
+    res.json(atenciones)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// 📌 Obtener detalle de una atención por ID
+export const getAtencionById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params
+
+    const atencion = await AtencionMedica.findById(id)
+      .populate('user', 'nombre correo')
+      .populate('medicamentosAdministrados.medicamento', 'nombre_comercial nombre_generico presentacion')
+
+    if (!atencion) {
+      return res.status(404).json({ message: 'Atención no encontrada' })
+    }
+
+    res.json(atencion)
+  } catch (err) {
+    next(err)
+  }
+}
+
+
