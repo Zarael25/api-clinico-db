@@ -5,6 +5,7 @@ import {
   createAtencionMedica,
   getAtencionesByEstudiante,
   getAtencionById,
+  getAtencionesByFecha,
 } from './controller'
 
 
@@ -25,14 +26,20 @@ atencionMedica.get(
   getAtencionesByEstudiante
 )
 
+// 📌 Listar atenciones por fecha (ej: ?fecha=2025-04-25)
+atencionMedica.get(
+  '/fecha',
+  passport.authenticate('jwt', { session: false }),
+  getAtencionesByFecha
+)
+
+
 // Detalle
 atencionMedica.get(
   '/:id',
   passport.authenticate('jwt', { session: false }),
   getAtencionById
 )
-
-
 
 
 export default atencionMedica

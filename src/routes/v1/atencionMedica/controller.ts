@@ -1,6 +1,7 @@
 // routes/v1/atencionMedica/controller.ts
 import { Request, Response, NextFunction } from 'express'
 import AtencionMedica from '../../../database/models/AtencionMedica'
+import Estudiante from '../../../database/models/Estudiante'
 
 // 📌 Crear una nueva atención médica
 export const createAtencionMedica = async (req: Request, res: Response, next: NextFunction) => {
@@ -63,3 +64,44 @@ export const getAtencionById = async (req: Request, res: Response, next: NextFun
 }
 
 
+export const getAtencionesByFecha = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { fecha } = req.query
+
+    if (!fecha) {
+      return res.status(400).json({ message: 'Debe enviar una fecha en formato YYYY-MM-DD' })
+    }
+
+    const inicio = new Date(`${fecha}T00:00:00.000Z`)
+    const fin = new Date(`${fecha}T23:59:59.999Z`)
+
+    // Traigo las atenciones (sin populate de estudiante porque está en otra DB)
+    const atenciones = await AtencionMedica.find({
+      fecha: { $gte: inicio, $lte: fin }
+    })
+      .populate('user', 'nombre correo')
+      .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
+      .lean() // 👈 convierte a objetos planos
+      .exec()
+
+    // Extraigo los IDs de estudiantes
+    const idsEstudiantes = atenciones.map(a => a.estudiante).filter(Boolean)
+
+    // Consulto estudiantes en su propia conexión
+    const estudiantes = await Estudiante.find({ _id: { $in: idsEstudiantes } })
+      .select('nombre appaterno apmaterno carnet rude tutores gestiones')
+      .lean()
+
+    // Combino estudiantes con sus atenciones
+    const estudiantesMap = new Map(estudiantes.map(e => [String(e._id), e]))
+
+    const resultado = atenciones.map(a => ({
+      ...a,
+      estudiante: estudiantesMap.get(String(a.estudiante)) || null
+    }))
+
+    res.json(resultado)
+  } catch (err) {
+    next(err)
+  }
+}

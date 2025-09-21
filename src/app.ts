@@ -52,6 +52,11 @@ const options: cors.CorsOptions = {
       _callback(new Error('no permitido'))
     }
   },
+
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // 👈 agrega métodos
+  allowedHeaders: ['Authorization', 'Content-Type'], // 👈 importante
+  credentials: true, // si usas cookies o sesiones
+
 }
 app.use(cors(options))
 
