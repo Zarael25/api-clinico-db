@@ -6,6 +6,7 @@ import {
   getAtencionesByEstudiante,
   getAtencionById,
   getAtencionesByFecha,
+  generarReportePDF,
 } from './controller'
 
 
@@ -39,6 +40,14 @@ atencionMedica.get(
   '/:id',
   passport.authenticate('jwt', { session: false }),
   getAtencionById
+)
+
+
+// routes/v1/atencionMedica/index.ts
+atencionMedica.get(
+  '/reporte/pdf',
+  passport.authenticate('jwt', { session: false }),
+  generarReportePDF
 )
 
 
