@@ -8,19 +8,37 @@ import path from 'path'
 // 📌 Crear una nueva atención médica
 export const createAtencionMedica = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // 🔐 Usuario autenticado
+    const user = req.user as any
+    const userId = user?._id
+    const roles = user?.roles || []
+
+    // 🚫 Validar roles permitidos
+    const rolesPermitidos = ['admin', 'enfermeria']
+    const tienePermiso = roles.some((rol: string) => rolesPermitidos.includes(rol))
+
+    if (!tienePermiso) {
+      return res.status(403).json({
+        error: {
+          name: 'FORBIDDEN_ERROR',
+          message: 'No tienes permiso para registrar atenciones médicas.',
+          code: 'ERR_FORB',
+        },
+        code_response: 0,
+      })
+    }
+
     const { estudiante, motivo_consulta, diagnostico, tratamiento, sugerir_baja, medicamentosAdministrados } = req.body
 
-    // ⚡ El usuario autenticado lo saco del token, no del body
-    const userId = (req.user as any)._id
-
+    // Crear atención médica
     const nuevaAtencion = await AtencionMedica.create({
       estudiante,
-      user: userId,  // siempre viene del token
+      user: userId, // siempre viene del token
       motivo_consulta,
       diagnostico,
       tratamiento,
       sugerir_baja,
-      medicamentosAdministrados
+      medicamentosAdministrados,
     })
 
     res.status(201).json(nuevaAtencion)
@@ -28,6 +46,9 @@ export const createAtencionMedica = async (req: Request, res: Response, next: Ne
     next(err)
   }
 }
+
+
+
 
 
 // 📌 Listar atenciones de un estudiante
