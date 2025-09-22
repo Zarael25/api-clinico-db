@@ -22,11 +22,16 @@ export const searchEstudiantes = async (req: Request, res: Response, next: NextF
     const { q } = req.query
     const filter: any = {}
 
+    // 🔐 Extraer usuario autenticado desde JWT
+    const user = req.user as any
+    const nivelesUsuario: string[] = user?.niveles || []
+
+    // 👇 Siempre filtrar por los niveles permitidos del usuario
+    filter['gestiones.nivel'] = { $in: nivelesUsuario }
+
     if (q) {
-      // 🔹 reemplazar guiones bajos por espacios y dividir
       const terms = (q as string).replace(/_/g, ' ').trim().split(/\s+/)
 
-      // 🔹 cada palabra debe coincidir en al menos un campo
       filter.$and = terms.map(term => ({
         $or: [
           { nombre: { $regex: term, $options: 'i' } },
@@ -35,7 +40,7 @@ export const searchEstudiantes = async (req: Request, res: Response, next: NextF
           { carnet: { $regex: term, $options: 'i' } },
           { rude: { $regex: term, $options: 'i' } },
           { 'gestiones.curso': { $regex: term, $options: 'i' } },
-          { 'gestiones.nivel': { $regex: term, $options: 'i' } },
+          { 'gestiones.nivel': { $regex: term, $options: 'i' } }, // 👈 pero igual restringido por $in de arriba
         ],
       }))
     }

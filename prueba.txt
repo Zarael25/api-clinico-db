@@ -1,1 +1,4 @@
 pnpm add -D esbuild-register
+
+Crear usuarios
+pnpm run add:user

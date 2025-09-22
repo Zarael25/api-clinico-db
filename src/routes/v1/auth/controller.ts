@@ -74,6 +74,7 @@ export const authUsuario = async (
             appaterno: usuario.appaterno,
             apmaterno: usuario.apmaterno,
             roles: usuario.roles,
+            niveles: usuario.niveles,
           },
         })
       } catch (err) {
