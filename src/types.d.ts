@@ -14,6 +14,7 @@ export type ErrorName =
   | 'NO_TOKEN_PROVIDED'
   | 'TOKEN_EXPIRED_ERROR'
   | 'FORBIDDEN_ERROR'
+  | 'LOCKED_USER'  
 
 export type ErrorCode =
   | 'ERR_CFG'
@@ -30,6 +31,7 @@ export type ErrorCode =
   | 'ERR_NT'
   | 'ERR_TE'
   | 'ERR_FORB'
+  | 'ERR_LOCKED'
 
 export type ValidationError = {
   error: {
