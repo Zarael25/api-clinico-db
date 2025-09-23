@@ -108,36 +108,32 @@ export const getAtencionById = async (req: Request, res: Response, next: NextFun
 }
 
 
-
 export const getAtencionesByFecha = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { fecha } = req.query
+    const { fecha } = req.query // "2025-09-22"
 
     if (!fecha) {
       return res.status(400).json({ message: 'Debe enviar una fecha en formato YYYY-MM-DD' })
     }
 
-    const inicio = new Date(`${fecha}T00:00:00.000Z`)
-    const fin = new Date(`${fecha}T23:59:59.999Z`)
+    // 📌 Bolivia = UTC-4
+    const inicio = new Date(`${fecha}T00:00:00-04:00`)
+    const fin = new Date(`${fecha}T23:59:59-04:00`)
 
-    // Traigo las atenciones (sin populate de estudiante porque está en otra DB)
     const atenciones = await AtencionMedica.find({
       fecha: { $gte: inicio, $lte: fin }
     })
       .populate('user', 'nombre correo')
       .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
-      .lean() // 👈 convierte a objetos planos
+      .lean()
       .exec()
 
-    // Extraigo los IDs de estudiantes
     const idsEstudiantes = atenciones.map(a => a.estudiante).filter(Boolean)
 
-    // Consulto estudiantes en su propia conexión
     const estudiantes = await Estudiante.find({ _id: { $in: idsEstudiantes } })
       .select('nombre appaterno apmaterno carnet rude tutores gestiones')
       .lean()
 
-    // Combino estudiantes con sus atenciones
     const estudiantesMap = new Map(estudiantes.map(e => [String(e._id), e]))
 
     const resultado = atenciones.map(a => ({
@@ -167,6 +163,14 @@ const printer = new PdfPrinter(fonts)
 // 📌 Generar reporte PDF de atenciones
 export const generarReportePDF = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // 🔒 Verificación de roles
+    const rolesPermitidos = ['admin', 'enfermeria', 'administracion']
+    const usuario = (req.user as any) // 👈 depende de cómo lo cargues en tu auth middleware
+
+    if (!usuario || !usuario.roles?.some((rol: string) => rolesPermitidos.includes(rol))) {
+      return res.status(403).json({ message: 'No tiene permisos para generar el reporte.' })
+    }
+
     const { anio, mes, dia } = req.query
 
     // 🎯 Construyo el filtro dinámico
@@ -180,7 +184,10 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
       const fin = new Date(Number(anio), Number(mes), 0, 23, 59, 59)
       filtro.fecha = { $gte: inicio, $lte: fin }
     } else if (anio) {
-      filtro.fecha = { $gte: new Date(`${anio}-01-01`), $lte: new Date(`${anio}-12-31`) }
+      filtro.fecha = {
+        $gte: new Date(`${anio}-01-01`),
+        $lte: new Date(`${anio}-12-31`),
+      }
     }
 
     // 🔎 Busco atenciones
@@ -188,6 +195,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
       .populate('user', 'nombre')
       .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
       .lean()
+
 
     // Estudiantes
     const idsEstudiantes = atenciones.map(a => a.estudiante).filter(Boolean)
