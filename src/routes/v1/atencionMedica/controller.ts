@@ -67,14 +67,35 @@ export const getAtencionesByEstudiante = async (req: Request, res: Response, nex
   }
 }
 
-// 📌 Obtener detalle de una atención por ID
+// 📌 Obtener detalle de una atención por ID (solo admin y enfermeria)
 export const getAtencionById = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const user = req.user as any
+    const roles = user?.roles || []
+
+    // 🚫 Validar roles permitidos
+    const rolesPermitidos = ['admin', 'enfermeria']
+    const tienePermiso = roles.some((rol: string) => rolesPermitidos.includes(rol))
+
+    if (!tienePermiso) {
+      return res.status(403).json({
+        error: {
+          name: 'FORBIDDEN_ERROR',
+          message: 'No tienes permiso para ver el detalle de la atención.',
+          code: 'ERR_FORB',
+        },
+        code_response: 0,
+      })
+    }
+
     const { id } = req.params
 
     const atencion = await AtencionMedica.findById(id)
       .populate('user', 'nombre correo')
-      .populate('medicamentosAdministrados.medicamento', 'nombre_comercial nombre_generico presentacion')
+      .populate(
+        'medicamentosAdministrados.medicamento',
+        'nombre_comercial nombre_generico presentacion'
+      )
 
     if (!atencion) {
       return res.status(404).json({ message: 'Atención no encontrada' })
@@ -85,6 +106,7 @@ export const getAtencionById = async (req: Request, res: Response, next: NextFun
     next(err)
   }
 }
+
 
 
 export const getAtencionesByFecha = async (req: Request, res: Response, next: NextFunction) => {

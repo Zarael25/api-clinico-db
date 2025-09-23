@@ -28,10 +28,14 @@ export const verifyToken = async (
   }
 }
 
+
 export const inRoles = (roles: string[] = []) => {
   return async (req: any, res: Response, next: NextFunction) => {
     try {
-      const accede = roles.some(el => req.user.role_name === el)
+      const userRoles: string[] = req.user?.roles || []
+
+      // Verifica si el usuario tiene al menos uno de los roles requeridos
+      const accede = userRoles.some((r) => roles.includes(r))
 
       if (!accede) {
         throw new ApiError({

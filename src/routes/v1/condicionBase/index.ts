@@ -11,7 +11,11 @@ import {
   updateVacunas,
 } from './controller'
 
+import { inRoles } from '../../../middlewares/authJwt'
+
 const condicionBase: Router = express.Router()
+
+// ===================== SOLO LECTURA =====================
 
 // Obtener condición base de un estudiante
 condicionBase.get(
@@ -20,41 +24,11 @@ condicionBase.get(
   getCondicionBaseByEstudiante
 )
 
-// Crear o actualizar condición base
-condicionBase.post(
-  '/:estudianteId',
-  passport.authenticate('jwt', { session: false }),
-  createOrUpdateCondicionBase
-)
-
-// Editar condición base
-condicionBase.patch(
-  '/:estudianteId',
-  passport.authenticate('jwt', { session: false }),
-  updateCondicionBase
-)
-
-// Editar condición base
-condicionBase.patch(
-  "/:estudianteId/condicion",
-  passport.authenticate("jwt", { session: false }),
-  updateSoloCondicion
-)
-
-
 // Obtener solo alergias de un estudiante
 condicionBase.get(
   '/:estudianteId/alergias',
   passport.authenticate('jwt', { session: false }),
   getAlergiasByEstudiante
-)
-
-
-// Reemplazar todas las alergias
-condicionBase.put(
-  '/:estudianteId/alergias',
-  passport.authenticate('jwt', { session: false }),
-  updateAlergias
 )
 
 // Obtener solo vacunas
@@ -64,14 +38,46 @@ condicionBase.get(
   getVacunasByEstudiante
 )
 
+// ===================== LECTURA + ESCRITURA (solo admin y enfermeria) =====================
+
+// Crear o actualizar condición base
+condicionBase.post(
+  '/:estudianteId',
+  passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
+  createOrUpdateCondicionBase
+)
+
+// Editar condición base
+condicionBase.patch(
+  '/:estudianteId',
+  passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
+  updateCondicionBase
+)
+
+// Editar solo la condición
+condicionBase.patch(
+  '/:estudianteId/condicion',
+  passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
+  updateSoloCondicion
+)
+
+// Reemplazar todas las alergias
+condicionBase.put(
+  '/:estudianteId/alergias',
+  passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
+  updateAlergias
+)
+
 // Reemplazar todas las vacunas
 condicionBase.put(
   '/:estudianteId/vacunas',
   passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
   updateVacunas
 )
-
-
-
 
 export default condicionBase
