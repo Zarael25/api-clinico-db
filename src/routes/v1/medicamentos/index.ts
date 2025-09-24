@@ -1,4 +1,3 @@
-// routes/v1/medicamentos/index.ts
 import express, { Router } from 'express'
 import passport from 'passport'
 import {
@@ -9,12 +8,17 @@ import {
   deleteMedicamento,
 } from './controller'
 
+import { inRoles } from '../../../middlewares/authJwt' // 👈 importa tu middleware de roles
+
 const medicamentos: Router = express.Router()
+
+// ===================== SOLO ADMIN Y ENFERMERÍA =====================
 
 // Crear medicamento
 medicamentos.post(
   '/',
   passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
   createMedicamento
 )
 
@@ -22,6 +26,7 @@ medicamentos.post(
 medicamentos.get(
   '/',
   passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
   getMedicamentos
 )
 
@@ -29,6 +34,7 @@ medicamentos.get(
 medicamentos.get(
   '/:id',
   passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
   getMedicamentoById
 )
 
@@ -36,6 +42,7 @@ medicamentos.get(
 medicamentos.patch(
   '/:id',
   passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
   updateMedicamento
 )
 
@@ -43,6 +50,7 @@ medicamentos.patch(
 medicamentos.delete(
   '/:id',
   passport.authenticate('jwt', { session: false }),
+  inRoles(['admin', 'enfermeria']),
   deleteMedicamento
 )
 
