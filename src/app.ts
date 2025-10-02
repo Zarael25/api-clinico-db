@@ -61,7 +61,8 @@ passport.use(jwtStrategy)
 const whitelist: string[] = [
   'http://localhost:5173', 
   'http://localhost:3000',
-  'http://192.168.1.101:4000'  
+  'http://192.168.1.101:4000',
+  'http://localhost:4000'  
 ]
 
 const options: cors.CorsOptions = {
