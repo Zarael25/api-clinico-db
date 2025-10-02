@@ -1,4 +1,19 @@
-// routes/v1/auth/controller.ts
+/**
+ * Descripción:
+ *   Controladores de autenticación de usuarios.
+ *   Incluyen inicio de sesión con generación de JWT y endpoint para
+ *   obtener el perfil del usuario autenticado.
+ *
+ * Características:
+ *   - authUsuario → autentica credenciales con estrategia local (passport-local),
+ *     genera un JWT y devuelve información básica del usuario.
+ *   - getMe → devuelve el perfil completo del usuario autenticado usando JWT.
+ *
+ * Uso:
+ *   router.post('/auth/signin', authUsuario)
+ *   router.get('/auth/me', getMe)
+ */
+
 import { NextFunction, Request, Response } from 'express'
 import passport from 'passport'
 import jwt from 'jsonwebtoken'
@@ -7,6 +22,7 @@ import { UsuarioAttributes } from '../../../database/models/Usuario'
 import EnvManager from '../../../config/EnvManager'
 import ApiError from '../../../errors/ApiError'
 
+// DTO para transformar el usuario en un objeto seguro para el frontend
 function toUsuarioDTO(usuario: any) {
   return {
     id: usuario.id,
@@ -14,7 +30,7 @@ function toUsuarioDTO(usuario: any) {
     nombre: usuario.nombre,
     appaterno: usuario.appaterno,
     apmaterno: usuario.apmaterno,
-    carnet: usuario.carnet,     // si NO quieres exponerlo al frontend, quítalo
+    carnet: usuario.carnet,     
     avatar: usuario.avatar,
     roles: usuario.roles,
     niveles: usuario.niveles,
@@ -23,7 +39,8 @@ function toUsuarioDTO(usuario: any) {
     updatedAt: usuario.updatedAt,
   }
 }
-// routes/v1/auth/controller.ts
+
+// -------------------- LOGIN /signin --------------------
 export const authUsuario = async (
   req: Request,
   res: Response,
@@ -32,6 +49,7 @@ export const authUsuario = async (
   passport.authenticate('local', (error: Error, usuario: UsuarioAttributes) => {
     if (error) return next(error)
 
+    // Passport crea req.login → aquí deshabilitamos sesiones
     req.login(usuario, { session: false }, async error => {
       if (error) return next(error)
 
@@ -44,12 +62,13 @@ export const authUsuario = async (
             code: 'ERR_UNAUTH',
           })
 
-        // Token con payload mínimo
+        // Construir payload mínimo para el JWT
         const payload = {
           sub: usuario.id, // mejor usar "sub" estándar
           roles: usuario.roles,
         }
 
+        // Cargar secreto y tiempo de expiración desde .env
         const authJwtSecret = EnvManager.getAuthJwtSecret()
         const authJwtTime = EnvManager.getAuthJwtTime()
         if (!authJwtSecret || !authJwtTime)
@@ -60,10 +79,11 @@ export const authUsuario = async (
             code: 'ERR_CFG',
           })
 
+        // Firmar el token
         const token = jwt.sign(payload, authJwtSecret, { expiresIn: authJwtTime })
         res.setHeader('Authorization', `Bearer ${token}`)
 
-        // 👇 datos básicos (sin correo, sin carnet, sin fechas)
+        // Respuesta reducida con datos básicos del usuario
         return res.status(200).json({
           message: 'signin successfully',
           token,
@@ -90,6 +110,7 @@ export const getMe = [
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const usuario = req.user as UsuarioAttributes
+      // Devuelve información completa del usuario autenticado
       return res.json({
         usuario: {
           id: usuario.id,

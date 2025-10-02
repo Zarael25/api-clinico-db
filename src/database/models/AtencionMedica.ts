@@ -1,6 +1,5 @@
-// models/AtencionMedica.ts
 import { Schema, model, Document, Types } from 'mongoose'
-import { connUsuarios } from '../connection'  // 👈 importa tu conexión correcta
+import { connUsuarios } from '../connection'
 
 export type MedicamentoAdministradoEntity = {
   medicamento: Types.ObjectId
@@ -12,7 +11,7 @@ export type AtencionMedicaEntity = {
   id?: string | any
 
   estudiante: Types.ObjectId
-  user: Types.ObjectId // el profesional que atiende (Usuario)
+  user: Types.ObjectId
   fecha: Date
   motivo_consulta: string
   diagnostico: string

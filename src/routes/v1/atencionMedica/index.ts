@@ -1,4 +1,20 @@
-// routes/v1/atencionMedica/index.ts
+/**
+ * Descripción:
+ *   Definición de rutas para la gestión de atenciones médicas.
+ *   Todas las rutas están protegidas por autenticación JWT (passport).
+ *
+ * Características:
+ *   - POST   /api/v1/atenciones        → Crear nueva atención médica.
+ *   - GET    /api/v1/atenciones/estudiante/:estudianteId → Listar atenciones por estudiante.
+ *   - GET    /api/v1/atenciones/fecha  → Listar atenciones por fecha (YYYY-MM-DD).
+ *   - GET    /api/v1/atenciones/:id    → Obtener detalle de una atención por ID.
+ *   - GET    /api/v1/atenciones/reporte/pdf → Generar reporte PDF de atenciones.
+ *
+ * Uso:
+ *   import atencionMedica from './routes/v1/atenciones'
+ *   app.use('/api/v1/atenciones', atencionMedica)
+ */
+
 import express, { Router } from 'express'
 import passport from 'passport'
 import {
@@ -12,22 +28,22 @@ import {
 
 
 const atencionMedica: Router = express.Router()
-
-// 📌 Crear una nueva atención
+// ------------------ Crear Atención Médica ------------------
+// Solo usuarios con rol 'admin' o 'enfermeria' pueden crear
 atencionMedica.post(
   '/',
   passport.authenticate('jwt', { session: false }),
   createAtencionMedica
 )
 
-// Listar por estudiante
+// ------------------ Atenciones por Estudiante ------------------
 atencionMedica.get(
   '/estudiante/:estudianteId',
   passport.authenticate('jwt', { session: false }),
   getAtencionesByEstudiante
 )
 
-// 📌 Listar atenciones por fecha (ej: ?fecha=2025-04-25)
+// ------------------ Atenciones por Fecha ------------------
 atencionMedica.get(
   '/fecha',
   passport.authenticate('jwt', { session: false }),
@@ -35,15 +51,15 @@ atencionMedica.get(
 )
 
 
-// Detalle
+// ------------------ Detalle de Atención por ID ------------------
 atencionMedica.get(
   '/:id',
   passport.authenticate('jwt', { session: false }),
   getAtencionById
 )
 
-
-// routes/v1/atencionMedica/index.ts
+// ------------------ Generar Reporte PDF ------------------
+// Solo roles 'admin', 'enfermeria', 'administracion'
 atencionMedica.get(
   '/reporte/pdf',
   passport.authenticate('jwt', { session: false }),

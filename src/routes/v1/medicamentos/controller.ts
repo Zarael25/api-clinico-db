@@ -1,12 +1,32 @@
-// routes/v1/medicamentos/controller.ts
+/**
+ * Descripción:
+ *   Controladores para la gestión de medicamentos en el sistema.
+ *   Permiten crear, listar, obtener por ID, actualizar y eliminar medicamentos.
+ *
+ * Características:
+ *   - createMedicamento: registra un nuevo medicamento.
+ *   - getMedicamentos: lista todos los medicamentos almacenados.
+ *   - getMedicamentoById: obtiene un medicamento específico por su ID.
+ *   - updateMedicamento: actualiza la información de un medicamento existente.
+ *   - deleteMedicamento: elimina un medicamento por ID.
+ *
+ * Uso:
+ *   router.post('/medicamentos', createMedicamento)
+ *   router.get('/medicamentos', getMedicamentos)
+ *   router.get('/medicamentos/:id', getMedicamentoById)
+ *   router.patch('/medicamentos/:id', updateMedicamento)
+ *   router.delete('/medicamentos/:id', deleteMedicamento)
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import Medicamento from '../../../database/models/Medicamento'
 
-// 📌 Crear un medicamento
+// ------------------ Crear medicamento ------------------
 export const createMedicamento = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { nombre_comercial, nombre_generico, presentacion } = req.body
 
+    // Crear nuevo documento en MongoDB
     const nuevo = await Medicamento.create({
       nombre_comercial,
       nombre_generico,
@@ -19,7 +39,7 @@ export const createMedicamento = async (req: Request, res: Response, next: NextF
   }
 }
 
-// 📌 Listar todos los medicamentos
+// ------------------ Listar todos los medicamentos ------------------
 export const getMedicamentos = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const meds = await Medicamento.find().lean()
@@ -29,7 +49,7 @@ export const getMedicamentos = async (req: Request, res: Response, next: NextFun
   }
 }
 
-// 📌 Obtener un medicamento por ID
+// ------------------ Obtener medicamento por ID ------------------
 export const getMedicamentoById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
@@ -43,12 +63,13 @@ export const getMedicamentoById = async (req: Request, res: Response, next: Next
   }
 }
 
-// 📌 Actualizar un medicamento
+// ------------------ Actualizar medicamento ------------------
 export const updateMedicamento = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
     const { nombre_comercial, nombre_generico, presentacion } = req.body
 
+    // Actualizar documento y devolver el actualizado
     const actualizado = await Medicamento.findByIdAndUpdate(
       id,
       { nombre_comercial, nombre_generico, presentacion },
@@ -63,7 +84,8 @@ export const updateMedicamento = async (req: Request, res: Response, next: NextF
   }
 }
 
-// 📌 Eliminar medicamento
+
+// ------------------ Eliminar medicamento ------------------
 export const deleteMedicamento = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params

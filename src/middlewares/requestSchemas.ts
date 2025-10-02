@@ -1,8 +1,29 @@
 /* eslint-disable max-lines */
+/**
+ * Descripción:
+ *   Esquemas de validación con Joi para usuarios y autenticación.
+ *   Se utilizan en controladores o middlewares antes de procesar la lógica
+ *   para asegurar que los datos cumplen las reglas de formato y negocio.
+ *
+ * Características:
+ *   - createUsuarioSchema → valida la creación de usuarios.
+ *   - updateUsuarioSchema → valida la actualización parcial de usuarios.
+ *   - updatePasswordUsuarioSchema → valida cambio de contraseña.
+ *   - authSchema → valida credenciales de login.
+ *
+ * Uso:
+ *   await createUsuarioSchema.validateAsync(req.body)
+ *   await authSchema.validateAsync(req.body)
+ */
+
 import Joi from 'joi'
 import { ROLES } from '../database/models/Usuario'
 
 // <---------- Usuario Schema ---------->
+
+
+//Validación para crear un nuevo usuario
+ 
 export const createUsuarioSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(8).max(30).required(),
@@ -29,6 +50,9 @@ export const createUsuarioSchema = Joi.object({
     .required(),
 })
 
+
+//Validación para actualizar datos de un usuario
+//Requiere al menos un campo de los listados en `.or()`
 export const updateUsuarioSchema = Joi.object({
   email: Joi.string().email(),
   password: Joi.string().min(8).max(30),
@@ -56,6 +80,7 @@ export const updateUsuarioSchema = Joi.object({
   roles: Joi.array().items(Joi.string().valid(...ROLES)),
   niveles: Joi.array().items(Joi.string().valid('PM', 'PT', 'SM', 'ST')),
 }).or(
+  // Garantiza que al menos uno de estos campos sea enviado en la actualización
   'email',
   'password',
   'nombre',
@@ -73,11 +98,23 @@ export const updateUsuarioSchema = Joi.object({
   'niveles',
 )
 
+//Validación para cambio de contraseña
 export const updatePasswordUsuarioSchema = Joi.object({
   password: Joi.string().min(8).max(30).required(),
 })
 
 // <---------- Auth Schema ---------->
+
+
+//Validación para login de usuario
+//Exige carnet y contraseña con complejidad mínima:
+// - una mayúscula
+// - una minúscula
+// - un número
+// - un símbolo permitido
+
+
+
 export const authSchema = Joi.object({
   carnet: Joi.string().min(5).max(15).required(),
   password: Joi.string()

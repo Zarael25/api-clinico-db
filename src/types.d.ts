@@ -1,4 +1,23 @@
-// Types for Errors
+/**
+ * Descripción:
+ *   Tipos TypeScript globales para manejo de errores y paginación.
+ *   Incluyen la enumeración de nombres y códigos de error estandarizados,
+ *   además de interfaces para validar resultados paginados y errores de validación.
+ *
+ * Características:
+ *   - ErrorName: catálogo de nombres de error semánticos (ej: UNAUTHORIZED_ERROR).
+ *   - ErrorCode: catálogo de códigos cortos asociados a cada error (ej: ERR_UNAUTH).
+ *   - ValidationError: estructura uniforme para devolver errores de validación de datos.
+ *   - PagedParams: define los parámetros opcionales para consultas paginadas.
+ *   - PaginationResult<T>: tipado genérico para devolver resultados con metadatos de paginación.
+ *
+ * Uso:
+ *   - throw new ApiError({ name: 'NOT_FOUND_ERROR', code: 'ERR_NF', ... })
+ *   - const params: PagedParams = { limit: 20, page: 2, sortBy: 'createdAt-desc' }
+ *   - const result: PaginationResult<User> = await repo.getPaged(params)
+ */
+
+// ---------------- Tipos para Errores ----------------
 export type ErrorName =
   | 'CONFIGURATION_ERROR'
   | 'MODEL_NOT_FOUND_ERROR'
@@ -33,6 +52,8 @@ export type ErrorCode =
   | 'ERR_FORB'
   | 'ERR_LOCKED'
 
+
+// ---------------- Error de Validación ----------------
 export type ValidationError = {
   error: {
     name: string
@@ -43,6 +64,7 @@ export type ValidationError = {
   code_response: number
 }
 
+// ---------------- Tipos de Paginación ----------------
 export interface PagedParams {
   limit?: number
   page?: number

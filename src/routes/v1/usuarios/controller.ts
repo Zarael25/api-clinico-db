@@ -1,8 +1,34 @@
+/**
+ * Descripción:
+ *   Controladores para la gestión de usuarios del sistema.
+ *   Incluyen operaciones CRUD, obtención de usuarios paginados
+ *   y actualización de contraseñas de manera segura.
+ *
+ * Características:
+ *   - listUsuarios: devuelve lista completa de usuarios (opcionalmente filtrada/ordenada).
+ *   - listPagedUsuarios: devuelve lista paginada de usuarios con validación de parámetros.
+ *   - getUsuario: obtiene detalle de un usuario por su ID.
+ *   - createUsuario: crea un nuevo usuario con validaciones y encriptación de contraseña.
+ *   - updateUsuario: actualiza datos generales de un usuario existente.
+ *   - updatePasswordUsuario: actualiza solo la contraseña de un usuario (hash seguro).
+ *   - deleteUsuario: elimina un usuario por ID.
+ *
+ * Uso:
+ *   router.get('/usuarios', listUsuarios)
+ *   router.get('/usuarios/paged', listPagedUsuarios)
+ *   router.get('/usuarios/:id', getUsuario)
+ *   router.post('/usuarios', createUsuario)
+ *   router.patch('/usuarios/:id', updateUsuario)
+ *   router.patch('/usuarios/:id/password', updatePasswordUsuario)
+ *   router.delete('/usuarios/:id', deleteUsuario)
+ */
+
 import { NextFunction, Request, Response } from 'express'
 import UsuarioResource from '../../../resources/UsuarioResource'
 import UsuarioRepository from '../../../repositories/UsuarioRepository'
 import ApiError from '../../../errors/ApiError'
 
+// ------------------ Listar todos los usuarios ------------------
 export const listUsuarios = async (
   req: Request,
   res: Response,
@@ -22,6 +48,7 @@ export const listUsuarios = async (
   }
 }
 
+// ------------------ Listar usuarios paginados ------------------
 export const listPagedUsuarios = async (
   req: Request,
   res: Response,
@@ -59,6 +86,8 @@ export const listPagedUsuarios = async (
   }
 }
 
+
+// ------------------ Obtener un usuario por ID ------------------
 export const getUsuario = async (
   req: Request,
   res: Response,
@@ -75,6 +104,7 @@ export const getUsuario = async (
   }
 }
 
+// ------------------ Crear un nuevo usuario ------------------
 export const createUsuario = async (
   req: Request,
   res: Response,
@@ -90,7 +120,7 @@ export const createUsuario = async (
     next(error)
   }
 }
-
+// ------------------ Actualizar datos de un usuario ------------------
 export const updateUsuario = async (
   req: Request,
   res: Response,
@@ -107,6 +137,8 @@ export const updateUsuario = async (
   }
 }
 
+
+// ------------------ Actualizar contraseña de un usuario ------------------
 export const updatePasswordUsuario = async (
   req: Request,
   res: Response,
@@ -123,6 +155,7 @@ export const updatePasswordUsuario = async (
   }
 }
 
+// ------------------ Eliminar un usuario ------------------
 export const deleteUsuario = async (
   req: Request,
   res: Response,

@@ -11,8 +11,6 @@ export type TutorEntity = {
   lugarTrabajo?: string
   parentesco: string
   celular: string
-
-  // 🔗 relación con estudiantes
   estudiantes?: Types.ObjectId[]
 }
 
@@ -57,7 +55,7 @@ const TutorSchema = new Schema<TutorAttributes>(
     estudiantes: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Estudiante', // 🔗 referencia a la colección de estudiantes
+        ref: 'Estudiante',
       },
     ],
   },

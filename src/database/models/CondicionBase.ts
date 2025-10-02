@@ -12,7 +12,7 @@ export type VacunaEntity = {
 export type CondicionBaseEntity = {
   id?: string | any
 
-  estudiante: Types.ObjectId // referencia al estudiante
+  estudiante: Types.ObjectId 
   condicion: string
 
   alergias?: AlergiaEntity[]

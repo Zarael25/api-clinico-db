@@ -1,7 +1,31 @@
+/**
+ * Descripción:
+ *   Controladores para la gestión de la condición clínica base de los estudiantes.
+ *   Incluye información general de salud, alergias y vacunas.
+ *
+ * Características:
+ *   - createOrUpdateCondicionBase: crea o actualiza la condición base de un estudiante.
+ *   - getCondicionBaseByEstudiante: obtiene la condición base completa.
+ *   - updateCondicionBase: edita todos los campos (condición, alergias, vacunas).
+ *   - updateSoloCondicion: edita solo la condición general.
+ *   - getAlergiasByEstudiante / updateAlergias: obtiene o reemplaza las alergias.
+ *   - getVacunasByEstudiante / updateVacunas: obtiene o reemplaza las vacunas.
+ *
+ * Uso:
+ *   router.post('/condicion-base/:estudianteId', createOrUpdateCondicionBase)
+ *   router.get('/condicion-base/:estudianteId', getCondicionBaseByEstudiante)
+ *   router.put('/condicion-base/:estudianteId', updateCondicionBase)
+ *   router.patch('/condicion-base/:estudianteId/condicion', updateSoloCondicion)
+ *   router.get('/condicion-base/:estudianteId/alergias', getAlergiasByEstudiante)
+ *   router.put('/condicion-base/:estudianteId/alergias', updateAlergias)
+ *   router.get('/condicion-base/:estudianteId/vacunas', getVacunasByEstudiante)
+ *   router.put('/condicion-base/:estudianteId/vacunas', updateVacunas)
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import CondicionBase from '../../../database/models/CondicionBase'
 
-// 📌 Crear o actualizar la condición base de un estudiante
+// ------------------ Crear o Actualizar Condición Base ------------------
 export const createOrUpdateCondicionBase = async (
   req: Request,
   res: Response,
@@ -11,11 +35,11 @@ export const createOrUpdateCondicionBase = async (
     const { estudianteId } = req.params
     const { condicion, alergias, vacunas } = req.body
 
-    // Si ya existe, actualizar; si no, crear
+    // Si ya existe, actualiza; si no, crea uno nuevo
     const condicionBase = await CondicionBase.findOneAndUpdate(
       { estudiante: estudianteId },
       { condicion, alergias, vacunas, estudiante: estudianteId },
-      { new: true, upsert: true } // 👈 crea si no existe
+      { new: true, upsert: true }
     )
 
     res.status(201).json(condicionBase)
@@ -24,7 +48,7 @@ export const createOrUpdateCondicionBase = async (
   }
 }
 
-// 📌 Obtener condición base de un estudiante
+// ------------------ Obtener Condición Base por Estudiante ------------------
 export const getCondicionBaseByEstudiante = async (
   req: Request,
   res: Response,
@@ -46,7 +70,7 @@ export const getCondicionBaseByEstudiante = async (
 }
 
 
-// 📌 Editar condición base de un estudiante
+// ------------------ Actualizar Toda la Condición Base ------------------
 export const updateCondicionBase = async (
   req: Request,
   res: Response,
@@ -57,9 +81,9 @@ export const updateCondicionBase = async (
     const { condicion, alergias, vacunas } = req.body
 
     const condicionBase = await CondicionBase.findOneAndUpdate(
-      { estudiante: estudianteId },   // buscar por ObjectId
-      { $set: { condicion, alergias, vacunas } }, // campos a modificar
-      { new: true } // devuelve el documento actualizado
+      { estudiante: estudianteId },  
+      { $set: { condicion, alergias, vacunas } }, 
+      { new: true } 
     ).lean()
 
     if (!condicionBase) {
@@ -73,7 +97,7 @@ export const updateCondicionBase = async (
 }
 
 
-// 📌 Editar solo la condición base de un estudiante
+// ------------------ Actualizar Solo la Condición ------------------
 export const updateSoloCondicion = async (
   req: Request,
   res: Response,
@@ -85,7 +109,7 @@ export const updateSoloCondicion = async (
 
     const condicionBase = await CondicionBase.findOneAndUpdate(
       { estudiante: estudianteId },
-      { $set: { condicion } }, // 👈 solo se actualiza este campo
+      { $set: { condicion } }, 
       { new: true }
     ).lean()
 
@@ -102,7 +126,7 @@ export const updateSoloCondicion = async (
 
 
 
-// 📌 Obtener solo las alergias de un estudiante
+// ------------------ Obtener Alergias ------------------
 export const getAlergiasByEstudiante = async (
   req: Request,
   res: Response,
@@ -127,7 +151,7 @@ export const getAlergiasByEstudiante = async (
 
 
 
-// Reemplazar todas las alergias de un estudiante (limpiando vacías)
+// ------------------ Actualizar Alergias ------------------
 export const updateAlergias = async (
   req: Request,
   res: Response,
@@ -135,7 +159,7 @@ export const updateAlergias = async (
 ) => {
   try {
     const { estudianteId } = req.params
-    let { alergias } = req.body // 👈 { "alergias": [{ "alergia": "Polvo" }] }
+    let { alergias } = req.body
 
     if (!Array.isArray(alergias)) {
       return res.status(400).json({ message: "Debe enviar un array de alergias" })
@@ -166,7 +190,7 @@ export const updateAlergias = async (
 
 
 
-// Obtener solo las vacunas de un estudiante
+// ------------------ Obtener Vacunas ------------------
 export const getVacunasByEstudiante = async (
   req: Request,
   res: Response,
@@ -176,7 +200,7 @@ export const getVacunasByEstudiante = async (
     const { estudianteId } = req.params
 
     const condicionBase = await CondicionBase.findOne({ estudiante: estudianteId })
-      .select('vacunas -_id') // 👈 solo trae el campo vacunas, sin _id
+      .select('vacunas -_id')
       .lean()
 
     if (!condicionBase) {
@@ -191,7 +215,7 @@ export const getVacunasByEstudiante = async (
 
 
 
-// Reemplazar todas las vacunas de un estudiante (limpiando vacías)
+// ------------------ Actualizar Vacunas ------------------
 export const updateVacunas = async (
   req: Request,
   res: Response,
@@ -199,18 +223,18 @@ export const updateVacunas = async (
 ) => {
   try {
     const { estudianteId } = req.params
-    let { vacunas } = req.body // 👈 { "vacunas": [{ "vacuna": "Influenza 2024" }] }
+    let { vacunas } = req.body
 
     if (!Array.isArray(vacunas)) {
       return res.status(400).json({ message: "Debe enviar un array de vacunas" })
     }
 
-    // 🔎 Filtrar vacías
+    // Filtrar vacunas vacías
     const vacunasLimpias = vacunas.filter(
       (v: any) => v.vacuna && v.vacuna.trim() !== ""
     )
 
-    // 👇 Guardar reemplazando toda la lista
+    
     const condicionBase = await CondicionBase.findOneAndUpdate(
       { estudiante: estudianteId },
       { $set: { vacunas: vacunasLimpias } },

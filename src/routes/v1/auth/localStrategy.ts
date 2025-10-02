@@ -1,3 +1,24 @@
+/**
+ * Descripción:
+ *   Estrategia local de Passport para autenticación con carnet y contraseña.
+ *   Se utiliza en el endpoint /auth/signin junto con passport-local.
+ *
+ * Características:
+ *   - usernameField = 'carnet' → el login se hace con el carnet de identidad.
+ *   - passwordField = 'password'.
+ *   - Verifica que el usuario exista en la BD y tenga contraseña.
+ *   - Valida que el usuario esté activo (estado = ACTIVE).
+ *   - Valida que el usuario tenga roles autorizados para iniciar sesión.
+ *   - Compara la contraseña ingresada con la almacenada usando bcrypt.
+ *   - Devuelve un UsuarioResource limpio (sin exponer password).
+ *
+ * Uso:
+ *   import passport from 'passport'
+ *   import localStrategy from './routes/v1/auth/localStrategy'
+ *
+ *   passport.use(localStrategy)
+ */
+
 import { Strategy } from 'passport-local'
 
 import UsuarioRepository from '../../../repositories/UsuarioRepository'
@@ -6,7 +27,7 @@ import ApiError from '../../../errors/ApiError'
 
 const localStrategy = new Strategy(
   {
-    usernameField: 'carnet', // <--- login con carnet
+    usernameField: 'carnet',
     passwordField: 'password',
     session: false,
   },
@@ -15,6 +36,7 @@ const localStrategy = new Strategy(
       const repository = new UsuarioRepository()
       const usuarioFound = await repository.getAuthByCarnet(carnet)
 
+      // ---------------- Validar existencia ----------------
       if (!usuarioFound || !usuarioFound.password) {
         throw new ApiError({
           name: 'UNAUTHORIZED_ERROR',
@@ -24,7 +46,7 @@ const localStrategy = new Strategy(
         })
       }
 
-      // 👇 Validar estado
+      // ---------------- Validar estado ----------------
       if (usuarioFound.estado !== 'ACTIVE') {
         throw new ApiError({
           name: 'LOCKED_USER',
@@ -34,7 +56,7 @@ const localStrategy = new Strategy(
         })
       }
 
-      // 👇 Validar roles permitidos
+      // ---------------- Validar roles permitidos ----------------
       const rolesPermitidos = ['admin', 'administracion', 'director', 'enfermeria']
       const tienePermiso = usuarioFound.roles?.some((rol: string) =>
         rolesPermitidos.includes(rol),
@@ -64,6 +86,7 @@ const localStrategy = new Strategy(
         })
       }
 
+      // ---------------- Transformar usuario a DTO seguro ----------------
       const usuarioResource = new UsuarioResource(usuarioFound)
 
       return done(null, usuarioResource.item())

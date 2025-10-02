@@ -1,10 +1,29 @@
-// routes/v1/estudiantes/controller.ts
+/**
+ * Descripción:
+ *   Controladores para la gestión de estudiantes en el sistema.
+ *   Permiten obtener la lista completa, buscar por parámetros dinámicos,
+ *   obtener un estudiante específico por ID y listar sus tutores.
+ *
+ * Características:
+ *   - getEstudiantes: lista todos los estudiantes registrados.
+ *   - searchEstudiantes: permite búsqueda filtrada (nombre, apellidos, carnet, RUDE, curso, nivel).
+ *   - getEstudianteById: obtiene un estudiante específico por ID.
+ *   - getTutoresByEstudiante: devuelve los tutores asociados a un estudiante.
+ *
+ * Uso:
+ *   router.get('/estudiantes', getEstudiantes)
+ *   router.get('/estudiantes/buscar', searchEstudiantes)
+ *   router.get('/estudiantes/:id', getEstudianteById)
+ *   router.get('/estudiantes/:id/tutores', getTutoresByEstudiante)
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import Estudiante from '../../../database/models/Estudiante'
 
-
+// ------------------ Listar todos los estudiantes ------------------
 export const getEstudiantes = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Obtiene todos los estudiantes de la colección
     const estudiantes = await Estudiante.find().lean()
     return res.json({
       count: estudiantes.length,
@@ -15,23 +34,25 @@ export const getEstudiantes = async (req: Request, res: Response, next: NextFunc
   }
 }
 
-// 🔎 Nuevo buscador con un solo parámetro `q`
 
+// ------------------ Buscar estudiantes (con filtros) ------------------
 export const searchEstudiantes = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q } = req.query
     const filter: any = {}
 
-    // 🔐 Extraer usuario autenticado desde JWT
+    // Niveles accesibles según el usuario autenticado
     const user = req.user as any
     const nivelesUsuario: string[] = user?.niveles || []
 
-    // 👇 Siempre filtrar por los niveles permitidos del usuario
+    
     filter['gestiones.nivel'] = { $in: nivelesUsuario }
 
+    // Si hay parámetro de búsqueda (q), construir condiciones dinámicas
     if (q) {
       const terms = (q as string).replace(/_/g, ' ').trim().split(/\s+/)
 
+      // Construir filtros combinados con $and y $or
       filter.$and = terms.map(term => ({
         $or: [
           { nombre: { $regex: term, $options: 'i' } },
@@ -45,6 +66,7 @@ export const searchEstudiantes = async (req: Request, res: Response, next: NextF
       }))
     }
 
+    // Buscar en BD
     const estudiantes = await Estudiante.find(filter).lean()
 
     return res.json({
@@ -57,11 +79,12 @@ export const searchEstudiantes = async (req: Request, res: Response, next: NextF
 }
 
 
-// 📌 Obtener estudiante por ID
+// ------------------ Obtener estudiante por ID ------------------
 export const getEstudianteById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
 
+    // Buscar estudiante por su ObjectId
     const estudiante = await Estudiante.findById(id).lean()
 
     if (!estudiante) {
@@ -78,7 +101,7 @@ export const getEstudianteById = async (req: Request, res: Response, next: NextF
 
 
 
-// 📌 Obtener todos los tutores de un estudiante
+// ------------------ Obtener tutores de un estudiante ------------------
 export const getTutoresByEstudiante = async (
   req: Request,
   res: Response,
@@ -87,7 +110,7 @@ export const getTutoresByEstudiante = async (
   try {
     const { id } = req.params
 
-    // Solo traemos el campo tutores
+    // Buscar estudiante solo con el campo tutores
     const estudiante = await Estudiante.findById(id).select('tutores').lean()
 
     if (!estudiante) {

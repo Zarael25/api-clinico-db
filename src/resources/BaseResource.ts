@@ -1,3 +1,36 @@
+/**
+ * Descripción:
+ *   Clase genérica BaseResource que sirve como base para los recursos (resources)
+ *   encargados de transformar entidades de la base de datos en respuestas JSON
+ *   estandarizadas. Facilita la conversión de una entidad, colecciones o
+ *   resultados paginados.
+ *
+ * Características:
+ *   - Lanza error si la entidad (instance) no existe.
+ *   - Define un método item() que debe implementarse en las subclases para
+ *     especificar cómo se transforma la entidad en un recurso.
+ *   - Ofrece métodos estáticos para:
+ *       • collection() → transformar arrays de entidades.
+ *       • paged() → transformar resultados paginados.
+ *   - Utiliza ApiError para manejo de errores consistentes.
+ *
+ * Uso:
+ *   class UsuarioResource extends BaseResource<UsuarioDocument, UsuarioDTO>() {
+ *     public item() {
+ *       return {
+ *         id: this.instance._id,
+ *         nombre: this.instance.nombre,
+ *         email: this.instance.email,
+ *       }
+ *     }
+ *   }
+ *
+ *   // Ejemplos:
+ *   new UsuarioResource(usuario).item()
+ *   UsuarioResource.collection(listaUsuarios)
+ *   UsuarioResource.paged(paginacionUsuarios)
+ */
+
 import ApiError from '../errors/ApiError'
 
 import type { PaginationResult } from '../types'
@@ -6,6 +39,7 @@ function BaseResource<A, E>() {
   return class Resource {
     public instance: A
     public constructor(instance: A | null) {
+      // Si no existe la entidad, lanzar error 404
       if (!instance) {
         throw new ApiError({
           name: 'NOT_FOUND_ERROR',
@@ -17,6 +51,10 @@ function BaseResource<A, E>() {
       this.instance = instance
     }
 
+
+    
+    //Transformar una entidad en un objeto de respuesta
+    //(Debe ser implementado en las subclases)
     public item(): E {
       throw new ApiError({
         name: 'METHOD_NOT_IMPLEMENTED',
@@ -26,6 +64,7 @@ function BaseResource<A, E>() {
       })
     }
 
+    //Transformar un arreglo de entidades en una colección de recursos
     public static collection(entities: Array<A>): Array<E> | undefined {
       if (!entities) {
         return
@@ -36,6 +75,7 @@ function BaseResource<A, E>() {
       })
     }
 
+    //Transformar un resultado paginado de entidades en un recurso paginado
     public static paged(
       paginatedResult: PaginationResult<A>,
     ): PaginationResult<E> | undefined {
@@ -55,13 +95,13 @@ function BaseResource<A, E>() {
         nextPage,
       } = paginatedResult
 
-      // Convertir los docs (items paginados) usando el método item()
+      //Transformar los documentos de la página actual
       const paginatedDocs = docs.map(instance => {
         const resource = new this(instance)
         return resource.item()
       })
 
-      // Retornar la estructura de paginación con los items transformados
+      
       return {
         docs: paginatedDocs,
         totalDocs,

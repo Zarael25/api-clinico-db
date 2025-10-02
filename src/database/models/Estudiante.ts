@@ -1,4 +1,3 @@
-// models/Estudiante.ts
 import { Schema, model, Document } from 'mongoose'
 import { connEstudiantes, connUsuarios } from '../connection'
 
@@ -85,14 +84,11 @@ const EstudianteSchema = new Schema<EstudianteAttributes>(
   },
 )
 
-// Index RUDE para búsquedas rápidas
 EstudianteSchema.index({ rude: 1 }, { unique: true })
 
-// 👉 Modelo en la conexión de estudiantes (para CRUD directo de Estudiante)
 const Estudiante = connEstudiantes.model('Estudiante', EstudianteSchema)
 export default Estudiante
 
-// 👉 Registrar también en la conexión de usuarios (para populate en AtencionMedica)
 if (!connUsuarios.models['Estudiante']) {
   connUsuarios.model('Estudiante', EstudianteSchema)
 }

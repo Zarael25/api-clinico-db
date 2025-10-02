@@ -1,14 +1,38 @@
+/**
+ * Descripción:
+ *   Controladores para la gestión de tutores en el sistema.
+ *   Permiten registrar, listar, consultar detalle, actualizar,
+ *   y gestionar la relación con estudiantes.
+ *
+ * Características:
+ *   - createTutor: registra un nuevo tutor en la BD.
+ *   - getTutores: devuelve lista de todos los tutores.
+ *   - getTutoresConEstudiantes: lista tutores con sus estudiantes cargados.
+ *   - getTutorById: obtiene detalle de un tutor junto a sus estudiantes.
+ *   - updateTutor: actualiza datos de un tutor existente.
+ *   - addEstudianteToTutor: agrega un estudiante a la lista de un tutor.
+ *   - removeEstudianteFromTutor: elimina un estudiante de la lista de un tutor.
+ *
+ * Uso:
+ *   router.post('/tutores', createTutor)
+ *   router.get('/tutores', getTutores)
+ *   router.get('/tutores/con-estudiantes', getTutoresConEstudiantes)
+ *   router.get('/tutores/:id', getTutorById)
+ *   router.patch('/tutores/:id', updateTutor)
+ *   router.post('/tutores/:id/add-estudiante', addEstudianteToTutor)
+ *   router.delete('/tutores/:id/remove-estudiante/:estudianteId', removeEstudianteFromTutor)
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import Tutor from '../../../database/models/Tutor'
 import Estudiante from '../../../database/models/Estudiante'
 
-/**
- * 📌 Crear un nuevo tutor
- */
+// ------------------ Crear Tutor ------------------
 export const createTutor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { nombre, apellido, carnet, lugarTrabajo, parentesco, celular, estudiantes } = req.body
 
+    // Crear nuevo tutor
     const tutor = new Tutor({
       nombre,
       apellido,
@@ -31,9 +55,7 @@ export const createTutor = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-/**
- * 📌 Listar todos los tutores (sin estudiantes detallados)
- */
+// ------------------ Listar Tutores ------------------
 export const getTutores = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tutores = await Tutor.find().lean()
@@ -47,13 +69,13 @@ export const getTutores = async (req: Request, res: Response, next: NextFunction
   }
 }
 
-/**
- * 📌 Obtener tutores con estudiantes (join manual con connEstudiantes)
- */
+
+// ------------------ Listar Tutores con Estudiantes ------------------
 export const getTutoresConEstudiantes = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tutores = await Tutor.find().lean()
 
+    // Cargar estudiantes relacionados para cada tutor
     const resultado = await Promise.all(
       tutores.map(async (tutor: any) => {
         const estudiantes = await Estudiante.find({
@@ -77,22 +99,23 @@ export const getTutoresConEstudiantes = async (req: Request, res: Response, next
   }
 }
 
-/**
- * 📌 Obtener un tutor por ID
- */
+
+// ------------------ Obtener Tutor por ID ------------------
 export const getTutorById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
 
+    // Buscar tutor
     const tutor = await Tutor.findById(id).lean()
     if (!tutor) {
       return res.status(404).json({ message: 'Tutor no encontrado' })
     }
 
-    // traer estudiantes asociados
+    // Obtener estudiantes asociados
     const estudiantes = await Estudiante.find({
       _id: { $in: tutor.estudiantes },
     }).lean()
+
 
     return res.status(200).json({
       message: 'Tutor obtenido correctamente',
@@ -104,9 +127,8 @@ export const getTutorById = async (req: Request, res: Response, next: NextFuncti
   }
 }
 
-/**
- * 📌 Editar tutor completo
- */
+
+// ------------------ Actualizar Tutor ------------------
 export const updateTutor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
@@ -132,17 +154,16 @@ export const updateTutor = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-/**
- * 📌 Agregar estudiante a tutor
- */
+
+// ------------------ Agregar Estudiante a Tutor ------------------
 export const addEstudianteToTutor = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params // id del tutor
+    const { id } = req.params 
     const { estudianteId } = req.body
 
     const tutor = await Tutor.findByIdAndUpdate(
       id,
-      { $addToSet: { estudiantes: estudianteId } }, // evita duplicados
+      { $addToSet: { estudiantes: estudianteId } },
       { new: true }
     ).lean()
 
@@ -160,9 +181,8 @@ export const addEstudianteToTutor = async (req: Request, res: Response, next: Ne
   }
 }
 
-/**
- * 📌 Remover estudiante de tutor
- */
+
+// ------------------ Remover Estudiante de Tutor ------------------
 export const removeEstudianteFromTutor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, estudianteId } = req.params

@@ -1,18 +1,36 @@
-// routes/v1/estudiantes/index.ts
+/**
+ * Descripción:
+ *   Definición de rutas para la gestión de estudiantes.
+ *   Incluye listado completo, búsqueda por parámetros dinámicos,
+ *   obtención de un estudiante específico y listado de tutores.
+ *
+ * Características:
+ *   - Protegidas con autenticación JWT (passport-jwt).
+ *   - Uso de controladores especializados para cada acción.
+ *
+ * Uso:
+ *   router.get('/estudiantes', getEstudiantes)
+ *   router.get('/estudiantes/buscar', searchEstudiantes)
+ *   router.get('/estudiantes/:id', getEstudianteById)
+ *   router.get('/estudiantes/:id/tutores', getTutoresByEstudiante)
+ */
+
 import express, { Router } from 'express'
 import passport from 'passport'
 import { getEstudiantes, searchEstudiantes, getEstudianteById, getTutoresByEstudiante } from './controller'
 
 const estudiantes: Router = express.Router()
 
-// 📌 Listar todos los estudiantes
+
+// ------------------ Listar todos los estudiantes ------------------
 estudiantes.get(
   '/',
   passport.authenticate('jwt', { session: false }),
   getEstudiantes
 )
 
-// 📌 Buscador avanzado
+
+// ------------------ Buscar estudiantes ------------------
 estudiantes.get(
   '/buscar/',
   passport.authenticate('jwt', { session: false }),
@@ -20,7 +38,7 @@ estudiantes.get(
 )
 
 
-// 📌 Obtener estudiante por ID
+// ------------------ Obtener estudiante por ID ------------------
 estudiantes.get(
   '/:id',
   passport.authenticate('jwt', { session: false }),
@@ -28,7 +46,7 @@ estudiantes.get(
 )
 
 
-// 📌 Obtener tutores de un estudiante
+// ------------------ Obtener tutores de un estudiante ------------------
 estudiantes.get(
   '/:id/tutores',
   passport.authenticate('jwt', { session: false }),

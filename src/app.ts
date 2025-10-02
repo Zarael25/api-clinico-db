@@ -1,3 +1,25 @@
+/**
+ * Descripción:
+ *   Archivo principal de configuración del servidor Express.
+ *   Aquí se inicializan middlewares globales, seguridad, CORS,
+ *   logging, Passport (autenticación) y rutas de la API.
+ *
+ * Características:
+ *   - Configura seguridad con Helmet (desactiva `x-powered-by`).
+ *   - Manejo de logs con Morgan en modo 'dev'.
+ *   - Soporte para JSON y URL-encoded en requests.
+ *   - Configuración de Passport con estrategias Local y JWT.
+ *   - Control de CORS con whitelist personalizada.
+ *   - Rutas base: `/v1` (versionado de la API).
+ *   - Ruta raíz `/` que devuelve información de `package.json`.
+ *   - Manejo centralizado de errores con Boom y middleware `errorHandler`.
+ *
+ * Uso:
+ *   - Importado en `server.ts` o `index.ts` para ejecutar `app.listen(port)`.
+ *   - Ejecutar en desarrollo con: `npm run dev` o `ts-node-dev`.
+ *   - Endpoints disponibles bajo: `http://localhost:<port>/v1/...`
+ */
+
 import boom from '@hapi/boom'
 import cors from 'cors'
 import express, { Application, json, urlencoded } from 'express'
@@ -14,30 +36,32 @@ import passport from 'passport'
 import localStrategy from './routes/v1/auth/localStrategy'
 import jwtStrategy from './routes/v1/auth/jwtStrategy'
 
-// App
+
 const app: Application = express()
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
 const port = EnvManager.getPort() ?? 3000
 
-// Settings
-app.disable('x-powered-by')
+// ------------------ Configuración inicial ------------------
+app.disable('x-powered-by') // seguridad extra (oculta tecnología)
 app.set('pkg', pkg)
 app.set('port', port)
 
-// Middlewares
+// ------------------ Middlewares globales ------------------
 app.use(json())
 app.use(urlencoded({ extended: true }))
 app.use(helmet({ crossOriginResourcePolicy: false }))
 app.use(morgan('dev'))
+
+// ------------------ Passport ------------------
 app.use(passport.initialize())
 passport.use(localStrategy)
 passport.use(jwtStrategy)
 
-// Security
+// ------------------ Configuración CORS ------------------
 const whitelist: string[] = [
   'http://localhost:5173', 
   'http://localhost:3000',
-  'http://192.168.1.101:4000'  // <-- tu frontend actual
+  'http://192.168.1.101:4000'  
 ]
 
 const options: cors.CorsOptions = {
@@ -53,14 +77,14 @@ const options: cors.CorsOptions = {
     }
   },
 
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // 👈 agrega métodos
-  allowedHeaders: ['Authorization', 'Content-Type'], // 👈 importante
-  credentials: true, // si usas cookies o sesiones
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], 
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  credentials: true, 
 
 }
 app.use(cors(options))
 
-// Redirect
+// ------------------ Ruta raíz ------------------
 app.get('/', (req, res) => {
   res.json({
     environment: EnvManager.getNodeEnv(),
@@ -77,10 +101,10 @@ app.get('/', (req, res) => {
   })
 })
 
-// API-REST V1
+// ------------------ Rutas API v1 ------------------
 app.use('/v1', v1)
 
-// Verify router
+// ------------------ Manejo de rutas inexistentes ------------------
 app.use((req, res) => {
   const {
     output: { statusCode, payload },
@@ -89,7 +113,8 @@ app.use((req, res) => {
   res.status(statusCode).json(payload)
 })
 
-// Error handlers
+
+// ------------------ Manejo centralizado de errores ------------------
 app.use(errorHandler)
 
 export default app

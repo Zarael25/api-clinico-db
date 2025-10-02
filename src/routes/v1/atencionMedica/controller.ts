@@ -1,19 +1,39 @@
-// routes/v1/atencionMedica/controller.ts
+/**
+ * Descripción:
+ *   Controladores para la gestión de atenciones médicas.
+ *   Incluyen registro de atenciones, consultas por estudiante o fecha,
+ *   obtención de detalle por ID y generación de reportes PDF.
+ *
+ * Características:
+ *   - createAtencionMedica: valida permisos y registra nueva atención.
+ *   - getAtencionesByEstudiante: lista atenciones de un estudiante con datos relacionados.
+ *   - getAtencionById: devuelve detalle de una atención validando permisos.
+ *   - getAtencionesByFecha: lista atenciones de un día específico con info de estudiantes.
+ *   - generarReportePDF: genera reporte PDF con tabla de atenciones y resumen de medicamentos.
+ *
+ * Uso:
+ *   router.post('/atenciones', verifyToken, inRoles(['admin','enfermeria']), createAtencionMedica)
+ *   router.get('/atenciones/estudiante/:estudianteId', verifyToken, getAtencionesByEstudiante)
+ *   router.get('/atenciones/:id', verifyToken, getAtencionById)
+ *   router.get('/atenciones', verifyToken, getAtencionesByFecha)
+ *   router.get('/atenciones/reporte/pdf', verifyToken, generarReportePDF)
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import AtencionMedica from '../../../database/models/AtencionMedica'
 import Estudiante from '../../../database/models/Estudiante'
 import PdfPrinter from 'pdfmake'
 import path from 'path'
 
-// 📌 Crear una nueva atención médica
+// ------------------ Crear Atención Médica ------------------
 export const createAtencionMedica = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // 🔐 Usuario autenticado
+    
     const user = req.user as any
     const userId = user?._id
     const roles = user?.roles || []
 
-    // 🚫 Validar roles permitidos
+    // Validar roles permitidos
     const rolesPermitidos = ['admin', 'enfermeria']
     const tienePermiso = roles.some((rol: string) => rolesPermitidos.includes(rol))
 
@@ -28,12 +48,13 @@ export const createAtencionMedica = async (req: Request, res: Response, next: Ne
       })
     }
 
+    // Crear nueva atención médica
     const { estudiante, motivo_consulta, diagnostico, tratamiento, sugerir_baja, medicamentosAdministrados } = req.body
 
-    // Crear atención médica
+    
     const nuevaAtencion = await AtencionMedica.create({
       estudiante,
-      user: userId, // siempre viene del token
+      user: userId, 
       motivo_consulta,
       diagnostico,
       tratamiento,
@@ -51,15 +72,15 @@ export const createAtencionMedica = async (req: Request, res: Response, next: Ne
 
 
 
-// 📌 Listar atenciones de un estudiante
+// ------------------ Atenciones por Estudiante ------------------
 export const getAtencionesByEstudiante = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { estudianteId } = req.params
 
     const atenciones = await AtencionMedica.find({ estudiante: estudianteId })
-      .populate('user', 'nombre correo') // solo campos básicos del profesional
+      .populate('user', 'nombre correo') // incluir nombre y correo del profesional
       .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
-      .sort({ fecha: -1 }) // más recientes primero
+      .sort({ fecha: -1 }) // orden descendente
 
     res.json(atenciones)
   } catch (err) {
@@ -67,13 +88,14 @@ export const getAtencionesByEstudiante = async (req: Request, res: Response, nex
   }
 }
 
-// 📌 Obtener detalle de una atención por ID (solo admin y enfermeria)
+
+// ------------------ Atenciones por ID ------------------
 export const getAtencionById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as any
     const roles = user?.roles || []
 
-    // 🚫 Validar roles permitidos
+    // Validar permisos
     const rolesPermitidos = ['admin', 'enfermeria']
     const tienePermiso = roles.some((rol: string) => rolesPermitidos.includes(rol))
 
@@ -108,15 +130,16 @@ export const getAtencionById = async (req: Request, res: Response, next: NextFun
 }
 
 
+// ------------------ Atenciones por Fecha ------------------
 export const getAtencionesByFecha = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { fecha } = req.query // "2025-09-22"
+    const { fecha } = req.query 
 
     if (!fecha) {
       return res.status(400).json({ message: 'Debe enviar una fecha en formato YYYY-MM-DD' })
     }
 
-    // 📌 Bolivia = UTC-4
+    // Construir rango de fechas
     const inicio = new Date(`${fecha}T00:00:00-04:00`)
     const fin = new Date(`${fecha}T23:59:59-04:00`)
 
@@ -128,12 +151,14 @@ export const getAtencionesByFecha = async (req: Request, res: Response, next: Ne
       .lean()
       .exec()
 
+    // Obtener estudiantes relacionados
     const idsEstudiantes = atenciones.map(a => a.estudiante).filter(Boolean)
-
     const estudiantes = await Estudiante.find({ _id: { $in: idsEstudiantes } })
       .select('nombre appaterno apmaterno carnet rude tutores gestiones')
       .lean()
 
+
+    // Construir resultado con datos completos de estudiantes
     const estudiantesMap = new Map(estudiantes.map(e => [String(e._id), e]))
 
     const resultado = atenciones.map(a => ({
@@ -148,7 +173,7 @@ export const getAtencionesByFecha = async (req: Request, res: Response, next: Ne
 }
 
 
-// Configuración de fuentes para pdfmake
+// ------------------ Configuración PDF ------------------
 const fonts = {
   Roboto: {
     normal: path.resolve(__dirname, '../../../fonts/Roboto-Regular.ttf'),
@@ -160,21 +185,22 @@ const fonts = {
 
 const printer = new PdfPrinter(fonts)
 
-// 📌 Generar reporte PDF de atenciones
+// ------------------ Generar Reporte PDF ------------------
 export const generarReportePDF = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // 🔒 Verificación de roles
+  
     const rolesPermitidos = ['admin', 'enfermeria', 'administracion']
-    const usuario = (req.user as any) // 👈 depende de cómo lo cargues en tu auth middleware
+    const usuario = (req.user as any) 
 
+    // Verificar permisos de usuario
     if (!usuario || !usuario.roles?.some((rol: string) => rolesPermitidos.includes(rol))) {
       return res.status(403).json({ message: 'No tiene permisos para generar el reporte.' })
     }
 
     const { anio, mes, dia } = req.query
-
-    // 🎯 Construyo el filtro dinámico
     const filtro: any = {}
+
+    // Construir filtro de fecha dinámico
     if (anio && mes && dia) {
       const inicio = new Date(Number(anio), Number(mes) - 1, Number(dia))
       const fin = new Date(Number(anio), Number(mes) - 1, Number(dia), 23, 59, 59)
@@ -190,14 +216,14 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
       }
     }
 
-    // 🔎 Busco atenciones
+    // Consultar atenciones
     const atenciones = await AtencionMedica.find(filtro)
       .populate('user', 'nombre')
       .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
       .lean()
 
 
-    // Estudiantes
+    // Obtener estudiantes relacionados
     const idsEstudiantes = atenciones.map(a => a.estudiante).filter(Boolean)
     const estudiantes = await Estudiante.find({ _id: { $in: idsEstudiantes } })
       .select('nombre appaterno apmaterno gestiones')
@@ -205,7 +231,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
 
     const estudiantesMap = new Map(estudiantes.map(e => [String(e._id), e]))
 
-    // 📄 Tabla principal
+    // ---------------- Construir cuerpo del reporte ----------------
     const body: any[] = []
     body.push([
       { text: 'Nº', style: 'tableHeader' },
@@ -231,10 +257,10 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
       const motivo = a.motivo_consulta
       const diagnostico = a.diagnostico
 
-      // 👇 cast rápido para user
+      
       const profesional = (a.user as any)?.nombre || '—'
 
-      // 👇 cast rápido para medicamentos
+      // Listado de medicamentos administrados      
       const meds = Array.isArray(a.medicamentosAdministrados)
         ? a.medicamentosAdministrados.map(m => {
             const med = m.medicamento as any
@@ -242,7 +268,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
           })
         : []
 
-      // Contar medicamentos
+      // Contador de medicamentos
       meds.forEach(nombre => {
         if (nombre) medicamentosContador[nombre] = (medicamentosContador[nombre] || 0) + 1
       })
@@ -260,7 +286,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
       ])
     })
 
-    // 📊 Resumen de medicamentos
+    // Resumen de medicamentos
     const medsBody: any[] = []
     medsBody.push([
       { text: 'Medicamento', style: 'tableHeader' },
@@ -270,7 +296,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
       medsBody.push([nombre, cantidad])
     })
 
-    // 📄 Definición del documento
+    // ---------------- Definición del documento PDF ----------------
     const docDefinition: any = {
       pageSize: 'LETTER',
       pageMargins: [30, 40, 30, 40],
@@ -283,7 +309,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
         {
           table: {
             headerRows: 1,
-            // 👇 combinamos auto + flexibles
+            
             widths: ['auto', 'auto', 80, 'auto', 'auto', '*', '*', '*', 'auto'],
             body,
           },
@@ -307,11 +333,11 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
         section: { fontSize: 13, bold: true, margin: [0, 10, 0, 5] },
         tableHeader: { bold: true, fillColor: '#eeeeee' },
       },
-      defaultStyle: { font: 'Roboto', fontSize: 9 }, // 👈 tamaño chico
+      defaultStyle: { font: 'Roboto', fontSize: 9 },
     }
 
 
-    // Enviar PDF
+    // Generar y enviar PDF
     const pdfDoc = printer.createPdfKitDocument(docDefinition)
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', 'attachment; filename=reporte.pdf')

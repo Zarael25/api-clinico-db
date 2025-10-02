@@ -1,11 +1,35 @@
+/**
+ * Descripción:
+ *   Recurso (Resource) para transformar entidades de Usuario de la base de datos
+ *   en objetos listos para devolver en las respuestas de la API.
+ *
+ * Características:
+ *   - Extiende de BaseResource para reutilizar lógica común.
+ *   - Implementa el método item() para definir la estructura del DTO de Usuario.
+ *   - Devuelve únicamente los campos relevantes para el cliente (sin exponer contraseñas).
+ *   - Compatible con collection() y paged() heredados de BaseResource.
+ *
+ * Uso:
+ *   new UsuarioResource(usuario).item()
+ *   UsuarioResource.collection(listaUsuarios)
+ *   UsuarioResource.paged(paginacionUsuarios)
+ */
+
 import { UsuarioAttributes, UsuarioEntity } from '../database/models/Usuario'
 import BaseResource from './BaseResource'
 
 class UsuarioResource extends BaseResource<UsuarioAttributes, UsuarioEntity>() {
+
+  
+  //Transforma una entidad Usuario (Documento de MongoDB) en un objeto UsuarioEntity
+  //listo para ser devuelto en la API.
+  
+
   public item() {
     const usuarioResource: UsuarioEntity = {
       id: this.instance.id,
 
+      // Datos personales
       email: this.instance.email,
       nombre: this.instance.nombre,
       appaterno: this.instance.appaterno,
@@ -18,9 +42,12 @@ class UsuarioResource extends BaseResource<UsuarioAttributes, UsuarioEntity>() {
       genero: this.instance.genero,
       celular: this.instance.celular,
       estado: this.instance.estado,
+
+      // Roles y niveles
       roles: this.instance.roles,
       niveles: this.instance.niveles,
 
+      // Metadatos
       createdAt: this.instance.createdAt,
       updatedAt: this.instance.updatedAt,
     }

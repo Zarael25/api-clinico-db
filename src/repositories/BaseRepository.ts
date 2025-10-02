@@ -1,4 +1,29 @@
 /* eslint-disable max-lines */
+/**
+ * Descripción:
+ *   Clase abstracta BaseRepository que implementa un patrón genérico de repositorio
+ *   para modelos de Mongoose. Centraliza operaciones comunes de CRUD, paginación,
+ *   filtrado y validación de referencias.
+ *
+ * Características:
+ *   - Métodos CRUD básicos: getAll, getById, create, update, delete.
+ *   - Soporte de ordenamiento configurable en allowedSortByFields.
+ *   - Filtros dinámicos usando liqe + getMongooseWhereClause.
+ *   - Paginación manual con información de páginas anterior/siguiente.
+ *   - Validación automática de referencias (_id) antes de crear/actualizar.
+ *   - Manejo de errores consistente usando ApiError.
+ *
+ * Uso:
+ *   class UsuarioRepository extends BaseRepository<UsuarioDocument> {
+ *     constructor() {
+ *       super(UsuarioModel)
+ *       this.allowedSortByFields = ['nombre', 'email', 'createdAt']
+ *       this.allowedFilterByFields = ['nombre', 'roles']
+ *     }
+ *   }
+ */
+
+
 import mongoose, {
   Model,
   Document,
@@ -23,17 +48,19 @@ export default abstract class BaseRepository<T extends Document> {
     this.model = model
   }
 
+
+  //Obtener todos los documentos con soporte para sortBy y filterBy
   public async getAll(options: Record<string, any> = {}): Promise<Array<T>> {
     const orderBy = this.getOrderBy(options.sortBy)
     delete options.sortBy
     options.sort = orderBy
 
+    // Si existen filtros, combinarlos con $and
     if (options.filterBy) {
       const filterConditions = Array.isArray(options.filterBy)
         ? options.filterBy.map((filter: string) => this.getFilterBy(filter))
         : [this.getFilterBy(options.filterBy)]
 
-      // Combinar los filtros usando `$and`
       options.where = { $and: filterConditions }
       delete options.filterBy
     }
@@ -44,6 +71,8 @@ export default abstract class BaseRepository<T extends Document> {
       .exec()
   }
 
+
+  //Obtener documentos con paginación
   public async getPaged(params: PagedParams): Promise<PaginationResult<any>> {
     const { limit = 10, page = 1, sortBy, filterBy } = params
     const orderBy = this.getOrderBy(sortBy)
@@ -54,7 +83,6 @@ export default abstract class BaseRepository<T extends Document> {
         ? options.filterBy.map((filter: string) => this.getFilterBy(filter))
         : [this.getFilterBy(options.filterBy)]
 
-      // Combinar los filtros usando `$and`
       options.where = { $and: filterConditions }
       delete options.filterBy
     }
@@ -64,7 +92,7 @@ export default abstract class BaseRepository<T extends Document> {
       .sort(options.sort)
       .exec()
 
-    // Realizar la paginación manualmente
+    // Paginación manual
     const totalDocs = docs.length
     const startIndex = (page - 1) * limit
     const endIndex = page * limit
@@ -91,6 +119,9 @@ export default abstract class BaseRepository<T extends Document> {
     return paginacion
   }
 
+
+
+  //Obtener un documento por ID
   public async getById(
     id: string | Types.ObjectId,
     options: QueryOptions = {},
@@ -98,11 +129,13 @@ export default abstract class BaseRepository<T extends Document> {
     return this.model.findById(id, options).exec()
   }
 
+  //Crear un nuevo documento
   public async create(body: Record<string, any>): Promise<T> {
     await this.validateReferences(body)
     return this.model.create(body)
   }
 
+  //Actualizar un documento por ID
   public async update(
     id: string | Types.ObjectId,
     body: UpdateQuery<T>,
@@ -111,6 +144,8 @@ export default abstract class BaseRepository<T extends Document> {
     return this.model.findByIdAndUpdate(id, body, { new: true }).exec()
   }
 
+
+  //Eliminar un documento por ID
   public async delete(id: string | Types.ObjectId): Promise<T | null> {
     const instance = await this.model.findByIdAndDelete(id).exec() // Cambiamos a findByIdAndDelete para retornar el documento eliminado
     if (!instance) {
@@ -124,6 +159,8 @@ export default abstract class BaseRepository<T extends Document> {
     return instance
   }
 
+
+  //Validar campo sortBy, asegurando que esté permitido
   protected getOrderBy(sortBy: string | undefined): Record<string, any> {
     const orderBy: Record<string, any> = { createdAt: -1 } // Por defecto ordenado por 'created_at' descendente
 
@@ -144,6 +181,7 @@ export default abstract class BaseRepository<T extends Document> {
     return { [parts[0]]: parts[1].toLowerCase() === 'asc' ? 1 : -1 }
   }
 
+  //Validar filtros enviados en filterBy
   protected getFilterBy(filterBy: string): FilterQuery<T> {
     try {
       return getMongooseWhereClause(parse(filterBy), this.allowedFilterByFields)
@@ -157,6 +195,7 @@ export default abstract class BaseRepository<T extends Document> {
     }
   }
 
+  //Validar referencias a otros modelos
   protected async validateReferences(body: Record<string, any>): Promise<void> {
     const idFields = Object.keys(body).filter(key => key.endsWith('_id'))
 
@@ -174,7 +213,7 @@ export default abstract class BaseRepository<T extends Document> {
         })
       }
 
-      // Verificar si existe el documento referenciado
+      // Verificar existencia del documento referenciado
       const exists = await model.exists({ _id: body[field] })
       if (!exists) {
         throw new ApiError({
@@ -187,6 +226,7 @@ export default abstract class BaseRepository<T extends Document> {
     }
   }
 
+  //Convertir snake_case a PascalCase para buscar modelos de Mongoose
   protected convertToCamelCase(input: string): string {
     return input
       .toLowerCase()
@@ -195,6 +235,7 @@ export default abstract class BaseRepository<T extends Document> {
       .join('')
   }
 
+  //Obtener un modelo de Mongoose por su nombre
   protected getModelByName<T extends mongoose.Document>(
     modelName: string,
   ): Model<T> | undefined {
