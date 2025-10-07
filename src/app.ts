@@ -34,36 +34,11 @@ const app: Application = express()
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
 const port = EnvManager.getPort() ?? 3000
 
-// ------------------ FIX para CORS en Vercel (debe ir antes de todo) ------------------
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin
-  const allowedOrigins = [
-    'https://web-clinico-db.vercel.app',
-    'https://don-bosco-clinico.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ]
-
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin)
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-    res.setHeader('Access-Control-Allow-Credentials', 'true')
-  }
-
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end()
-  }
-
-  next()
-})
-
 // ------------------ Configuración inicial ------------------
 app.disable('x-powered-by')
 app.set('pkg', pkg)
 app.set('port', port)
 
-// ------------------ Middlewares globales ------------------
 app.use(json())
 app.use(urlencoded({ extended: true }))
 app.use(helmet({ crossOriginResourcePolicy: false }))
@@ -74,7 +49,7 @@ app.use(passport.initialize())
 passport.use(localStrategy)
 passport.use(jwtStrategy)
 
-// ------------------ Configuración CORS estándar ------------------
+// ------------------ Configuración CORS ------------------
 const whitelist: string[] = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -85,72 +60,39 @@ const whitelist: string[] = [
   'https://web-clinico-db.vercel.app', // frontend desplegado en Vercel
 ]
 
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true)
-    const allowed = whitelist.some((url) =>
-      origin.toLowerCase().startsWith(url.toLowerCase()),
+// ✅ Middleware CORS completamente manual
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin
+  const allowed =
+    origin &&
+    whitelist.some((url) =>
+      origin.toLowerCase().replace(/\/$/, '').startsWith(url.toLowerCase()),
     )
-    allowed
-      ? callback(null, true)
-      : callback(new Error('CORS no permitido para este origen'))
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Authorization', 'Content-Type'],
-  exposedHeaders: ['Authorization', 'Content-Disposition'],
-  credentials: true,
-  optionsSuccessStatus: 204,
-}
 
-// ✅ Middleware global CORS
-app.use(cors(corsOptions))
-app.options(/.*/, cors(corsOptions))
-
-// ✅ Reforzar headers CORS en respuestas válidas
-app.use((req, res, next) => {
-  const origin = req.headers.origin
-  if (origin && whitelist.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin)
-    res.header('Access-Control-Allow-Credentials', 'true')
-  }
-  next()
-})
-
-// ✅ Reforzar CORS en todas las respuestas de error también
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin
-  const allowed = whitelist.some((url) =>
-    origin?.toLowerCase().startsWith(url.toLowerCase()),
-  )
+  console.log('🌐 Solicitud desde:', origin)
 
   if (allowed) {
-    res.header('Access-Control-Allow-Origin', origin!)
+    res.header('Access-Control-Allow-Origin', origin)
     res.header('Access-Control-Allow-Credentials', 'true')
-    res.header(
-      'Access-Control-Allow-Methods',
-      'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    )
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    console.log('✅ CORS permitido para:', origin)
+  } else if (origin) {
+    console.warn('🚫 CORS bloqueado para:', origin)
   }
-  next(err)
-})
 
-// ✅ Manejador de errores CORS (antes del errorHandler)
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  if (err && err.message.includes('CORS')) {
-    console.warn('❌ Bloqueado por CORS:', req.headers.origin)
-    return res.status(403).json({
-      error: {
-        name: 'CORS_BLOCKED',
-        message: 'Origen no autorizado por CORS',
-        code: 'ERR_CORS',
-      },
-      code_response: 0,
-    })
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+  )
+  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+  // ✅ Si es preflight OPTIONS, responder inmediatamente
+  if (req.method === 'OPTIONS') {
+    console.log('🟢 Respondiendo preflight CORS desde:', origin)
+    return res.sendStatus(200)
   }
-  next(err)
-})
 
+  next()
+})
 // ------------------ Ruta raíz ------------------
 app.get('/', (_req, res) => {
   res.json({
@@ -158,27 +100,19 @@ app.get('/', (_req, res) => {
     name: pkg.name,
     version: pkg.version,
     message: 'Welcome to my API: Don Bosco Clínico',
-    description: pkg.description,
-    repository: pkg.repository.url,
-    bugs: pkg.bugs.url,
-    license: pkg.license,
-    homepage: pkg.homepage,
-    keywords: pkg.keywords,
   })
 })
 
 // ------------------ Rutas API v1 ------------------
 app.use('/v1', v1)
 
-// ------------------ Manejo de rutas inexistentes ------------------
+// ------------------ Rutas inexistentes ------------------
 app.use((_req, res) => {
-  const {
-    output: { statusCode, payload },
-  } = boom.notFound('Página no encontrada')
-  res.status(statusCode).json(payload)
+  const { output } = boom.notFound('Página no encontrada')
+  res.status(output.statusCode).json(output.payload)
 })
 
-// ------------------ Manejo centralizado de errores ------------------
+// ------------------ Manejo de errores ------------------
 app.use(errorHandler)
 
 export default app
