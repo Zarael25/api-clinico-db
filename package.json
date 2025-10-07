@@ -4,6 +4,7 @@
   "description": "API-REST: para la gestión clínica para la Unidad Educativa Don Bosco Sucre",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "format": "prettier --write .",
     "lint": "tsc --noEmit && eslint \"src/**/*.ts*\"",
     "start": "pnpm run start:server",
@@ -45,6 +46,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
+    "@vercel/node": "^5.3.24",
     "chalk": "^4.1.2",
     "esbuild-register": "^3.6.0",
     "eslint": "^9.32.0",

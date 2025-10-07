@@ -1,8 +1,8 @@
 /**
  * Descripción:
- *   Punto de entrada del servidor. 
- *   Inicia la aplicación Express definida en `app.ts`
- *   y la expone en el puerto configurado.
+ *   Punto de entrada del servidor.
+ *   Soporta ejecución local con `app.listen()`
+ *   y modo serverless para Vercel exportando la app.
  *
  * Características:
  *   - Usa `debug` para logs de inicio (namespace: "app:server").
@@ -21,9 +21,18 @@ import app from './app'
 const debug = Debug('app:server')
 
 // ------------------ Puerto del servidor ------------------
-const port = app.get('port')
+const port = app.get('port') || 3000
+
+// ------------------ Detección de entorno ------------------
+const isVercel = process.env.VERCEL === '1' || process.env.NOW_REGION
 
 // ------------------ Inicio del servidor ------------------
-app.listen(port, '0.0.0.0', () => {
-  debug(`Listening http://localhost:${port}`)
-})
+if (!isVercel) {
+  // Modo local o Render/Railway/Docker
+  app.listen(port, '0.0.0.0', () => {
+    debug(`Listening on http://localhost:${port}`)
+  })
+}
+
+// Exportar la app para Vercel (modo serverless)
+export default app
