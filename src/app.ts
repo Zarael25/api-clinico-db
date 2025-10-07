@@ -76,10 +76,11 @@ const corsOptions: cors.CorsOptions = {
       origin.toLowerCase().startsWith(url.toLowerCase()),
     )
 
-    if (allowed) callback(null, true)
-    else {
+    if (allowed) {
+      callback(null, true)
+    } else {
       console.warn('🚫 CORS bloqueado para:', origin)
-      callback(new Error('No permitido por CORS'))
+      callback(null, false) // ✅ no lanzamos error, solo rechazamos
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -91,7 +92,6 @@ const corsOptions: cors.CorsOptions = {
 
 // Middleware global y soporte para preflight requests
 app.use(cors(corsOptions))
-app.options('*', cors(corsOptions))
 
 // ------------------ Ruta raíz ------------------
 app.get('/', (_req, res) => {
