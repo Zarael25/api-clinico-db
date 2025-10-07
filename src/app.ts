@@ -22,7 +22,7 @@
 
 import boom from '@hapi/boom'
 import cors from 'cors'
-import express, { Application, json, urlencoded } from 'express'
+import express, { Application, json, urlencoded, Request, Response, NextFunction } from 'express'
 import fs from 'fs'
 import helmet from 'helmet'
 import morgan from 'morgan'
@@ -40,7 +40,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
 const port = EnvManager.getPort() ?? 3000
 
 // ------------------ Configuración inicial ------------------
-app.disable('x-powered-by') // Seguridad extra
+app.disable('x-powered-by')
 app.set('pkg', pkg)
 app.set('port', port)
 
@@ -69,16 +69,12 @@ const whitelist: string[] = [
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true)
-
     const allowed = whitelist.some((url) =>
       origin.toLowerCase().startsWith(url.toLowerCase()),
     )
-
-    if (allowed) callback(null, true)
-    else {
-      console.warn('🚫 CORS bloqueado para:', origin)
-      callback(null, false)
-    }
+    allowed
+      ? callback(null, true)
+      : callback(new Error('CORS no permitido para este origen'))
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Authorization', 'Content-Type'],
@@ -87,18 +83,55 @@ const corsOptions: cors.CorsOptions = {
   optionsSuccessStatus: 204,
 }
 
+// ✅ Middleware global CORS
 app.use(cors(corsOptions))
 
-// ✅ Manejador global para preflight OPTIONS
+// ✅ Preflight OPTIONS global (Express 5 compatible)
+app.options(/.*/, cors(corsOptions))
+
+// ✅ Reforzar headers CORS en respuestas válidas
 app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*')
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  const origin = req.headers.origin
+  if (origin && whitelist.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin)
     res.header('Access-Control-Allow-Credentials', 'true')
-    return res.sendStatus(204) // Sin contenido pero éxito
   }
   next()
+})
+
+// ✅ Reforzar CORS en todas las respuestas de error también
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin
+  const allowed = whitelist.some((url) =>
+    origin?.toLowerCase().startsWith(url.toLowerCase()),
+  )
+
+  if (allowed) {
+    res.header('Access-Control-Allow-Origin', origin!)
+    res.header('Access-Control-Allow-Credentials', 'true')
+    res.header(
+      'Access-Control-Allow-Methods',
+      'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    )
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  }
+  next(err)
+})
+
+// ✅ Manejador de errores CORS (antes del errorHandler)
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  if (err && err.message.includes('CORS')) {
+    console.warn('❌ Bloqueado por CORS:', req.headers.origin)
+    return res.status(403).json({
+      error: {
+        name: 'CORS_BLOCKED',
+        message: 'Origen no autorizado por CORS',
+        code: 'ERR_CORS',
+      },
+      code_response: 0,
+    })
+  }
+  next(err)
 })
 
 // ------------------ Ruta raíz ------------------
