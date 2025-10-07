@@ -40,7 +40,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
 const port = EnvManager.getPort() ?? 3000
 
 // ------------------ Configuración inicial ------------------
-app.disable('x-powered-by') // Seguridad extra: oculta cabecera de tecnología
+app.disable('x-powered-by') // Seguridad extra
 app.set('pkg', pkg)
 app.set('port', port)
 
@@ -68,30 +68,38 @@ const whitelist: string[] = [
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    // Permitir peticiones sin origen (como en tests o preflight OPTIONS)
     if (!origin) return callback(null, true)
 
-    // Comparar sin distinción de mayúsculas/minúsculas
     const allowed = whitelist.some((url) =>
       origin.toLowerCase().startsWith(url.toLowerCase()),
     )
 
-    if (allowed) {
-      callback(null, true)
-    } else {
+    if (allowed) callback(null, true)
+    else {
       console.warn('🚫 CORS bloqueado para:', origin)
-      callback(null, false) // ✅ no lanzamos error, solo rechazamos
+      callback(null, false)
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Authorization', 'Content-Type'],
   exposedHeaders: ['Authorization', 'Content-Disposition'],
   credentials: true,
-  optionsSuccessStatus: 204, // evita errores con preflight OPTIONS
+  optionsSuccessStatus: 204,
 }
 
-// Middleware global y soporte para preflight requests
 app.use(cors(corsOptions))
+
+// ✅ Manejador global para preflight OPTIONS
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*')
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.header('Access-Control-Allow-Credentials', 'true')
+    return res.sendStatus(204) // Sin contenido pero éxito
+  }
+  next()
+})
 
 // ------------------ Ruta raíz ------------------
 app.get('/', (_req, res) => {
