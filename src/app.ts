@@ -16,7 +16,6 @@
  */
 
 import boom from '@hapi/boom'
-import cors from 'cors'
 import express, { Application, json, urlencoded, Request, Response, NextFunction } from 'express'
 import fs from 'fs'
 import helmet from 'helmet'
