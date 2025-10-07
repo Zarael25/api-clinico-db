@@ -13,11 +13,6 @@
  *   - Rutas base: `/v1` (API versionada).
  *   - Ruta raíz `/` devuelve metadatos del proyecto.
  *   - Manejo centralizado de errores con Boom y middleware custom.
- *
- * Uso:
- *   - Importado en `server.ts` para ejecutar `app.listen(port)`.
- *   - Ejecutar en desarrollo con: `npm run dev` o `pnpm dev`.
- *   - Endpoints disponibles bajo: `https://api-clinico-db.vercel.app/v1/...`
  */
 
 import boom from '@hapi/boom'
@@ -39,6 +34,30 @@ const app: Application = express()
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
 const port = EnvManager.getPort() ?? 3000
 
+// ------------------ FIX para CORS en Vercel (debe ir antes de todo) ------------------
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin
+  const allowedOrigins = [
+    'https://web-clinico-db.vercel.app',
+    'https://don-bosco-clinico.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ]
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end()
+  }
+
+  next()
+})
+
 // ------------------ Configuración inicial ------------------
 app.disable('x-powered-by')
 app.set('pkg', pkg)
@@ -55,7 +74,7 @@ app.use(passport.initialize())
 passport.use(localStrategy)
 passport.use(jwtStrategy)
 
-// ------------------ Configuración CORS ------------------
+// ------------------ Configuración CORS estándar ------------------
 const whitelist: string[] = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -85,8 +104,6 @@ const corsOptions: cors.CorsOptions = {
 
 // ✅ Middleware global CORS
 app.use(cors(corsOptions))
-
-// ✅ Preflight OPTIONS global (Express 5 compatible)
 app.options(/.*/, cors(corsOptions))
 
 // ✅ Reforzar headers CORS en respuestas válidas
