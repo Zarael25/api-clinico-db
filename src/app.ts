@@ -64,7 +64,8 @@ const whitelist: string[] = [
   'http://192.168.1.101:4000',
   'http://localhost:4000',
   'https://don-bosco-clinico.vercel.app',
-  'https://api-clinico-db.vercel.app'
+  'https://api-clinico-db.vercel.app',
+  'https://web-clinico-db.vercel.app'
 ]
 
 const options: cors.CorsOptions = {
