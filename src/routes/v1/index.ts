@@ -1,4 +1,5 @@
 import express, { Router } from 'express'
+import cors from 'cors'
 
 import auth from './auth'
 import usuarios from './usuarios'
@@ -9,6 +10,7 @@ import medicamentos from './medicamentos'
 import tutores from './tutores'
 
 const v1: Router = express.Router()
+v1.use(cors()) 
 
 v1.use('/usuarios', usuarios)
 v1.use('/auth', auth)
