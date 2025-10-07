@@ -38,17 +38,7 @@ app.disable('x-powered-by')
 app.set('pkg', pkg)
 app.set('port', port)
 
-app.use(json())
-app.use(urlencoded({ extended: true }))
-app.use(helmet({ crossOriginResourcePolicy: false }))
-app.use(morgan('dev'))
-
-// ------------------ Passport ------------------
-app.use(passport.initialize())
-passport.use(localStrategy)
-passport.use(jwtStrategy)
-
-// ------------------ Configuración CORS ------------------
+// ------------------ Configuración CORS universal ------------------
 const whitelist: string[] = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -59,39 +49,40 @@ const whitelist: string[] = [
   'https://web-clinico-db.vercel.app', // frontend desplegado en Vercel
 ]
 
-// ✅ Middleware CORS completamente manual
+// ⚡️ Middleware CORS compatible con Vercel
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin
-  const allowed =
-    origin &&
-    whitelist.some((url) =>
-      origin.toLowerCase().replace(/\/$/, '').startsWith(url.toLowerCase()),
-    )
-
-  console.log('🌐 Solicitud desde:', origin)
+  const origin = req.headers.origin || ''
+  const allowed = whitelist.some((url) =>
+    origin.toLowerCase().replace(/\/$/, '').startsWith(url.toLowerCase()),
+  )
 
   if (allowed) {
-    res.header('Access-Control-Allow-Origin', origin)
-    res.header('Access-Control-Allow-Credentials', 'true')
-    console.log('✅ CORS permitido para:', origin)
-  } else if (origin) {
-    console.warn('🚫 CORS bloqueado para:', origin)
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
   }
 
-  res.header(
-    'Access-Control-Allow-Methods',
-    'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-  )
-  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
-  // ✅ Si es preflight OPTIONS, responder inmediatamente
+  // ✅ Manejar preflight OPTIONS globalmente
   if (req.method === 'OPTIONS') {
-    console.log('🟢 Respondiendo preflight CORS desde:', origin)
-    return res.sendStatus(200)
+    res.status(200).end()
+    return
   }
 
   next()
 })
+
+app.use(json())
+app.use(urlencoded({ extended: true }))
+app.use(helmet({ crossOriginResourcePolicy: false }))
+app.use(morgan('dev'))
+
+// ------------------ Passport ------------------
+app.use(passport.initialize())
+passport.use(localStrategy)
+passport.use(jwtStrategy)
+
 // ------------------ Ruta raíz ------------------
 app.get('/', (_req, res) => {
   res.json({
