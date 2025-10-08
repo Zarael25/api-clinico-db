@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: api-clinico-db
+    env: node
+    plan: free
+
+    # ---------- Build ----------
+    buildCommand: |
+      pnpm install
+      pnpm run build
+
+    # ---------- Start ----------
+    startCommand: pnpm start
+
+    # ---------- Variables de entorno ----------
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false     # Se configura desde el panel (por seguridad)
+      - key: JWT_SECRET
+        sync: false
