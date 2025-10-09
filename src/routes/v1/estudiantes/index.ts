@@ -17,7 +17,7 @@
 
 import express, { Router } from 'express'
 import passport from 'passport'
-import { getEstudiantes, searchEstudiantes, getEstudianteById, getTutoresByEstudiante } from './controller'
+import { getEstudiantes, searchEstudiantes, getEstudianteById, getTutoresByEstudiante, searchEstudiantesPaginated, } from './controller'
 
 const estudiantes: Router = express.Router()
 
@@ -36,6 +36,14 @@ estudiantes.get(
   passport.authenticate('jwt', { session: false }),
   searchEstudiantes
 )
+
+// ------------------ Buscar estudiantes con paginación ------------------
+estudiantes.get(
+  '/buscar/paginado',
+  passport.authenticate('jwt', { session: false }),
+  searchEstudiantesPaginated
+)
+
 
 
 // ------------------ Obtener estudiante por ID ------------------

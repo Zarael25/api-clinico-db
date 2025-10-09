@@ -3,3 +3,5 @@ npx ts-node scripts/setup.ts
 
 Crear usuarios
 pnpm run add:user
+
+Script para crear tabla de condicion base

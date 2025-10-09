@@ -127,3 +127,59 @@ export const getTutoresByEstudiante = async (
     next(err)
   }
 }
+
+
+// ------------------ Buscar estudiantes (con filtros + paginación) ------------------
+export const searchEstudiantesPaginated = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { q = '', pagina = '1', limite = '12' } = req.query
+    const page = Math.max(parseInt(pagina as string), 1)
+    const limit = Math.max(parseInt(limite as string), 1)
+    const skip = (page - 1) * limit
+
+    const filter: any = {}
+
+    // Niveles accesibles según el usuario autenticado
+    const user = req.user as any
+    const nivelesUsuario: string[] = user?.niveles || []
+
+    // Solo aplicar si tiene niveles definidos
+    if (nivelesUsuario.length > 0) {
+      filter['gestiones.nivel'] = { $in: nivelesUsuario }
+    }
+
+    // Si hay parámetro de búsqueda (q), construir condiciones dinámicas
+    if (q && typeof q === 'string' && q.trim() !== '') {
+      const terms = q.replace(/_/g, ' ').trim().split(/\s+/)
+      filter.$and = terms.map((term) => ({
+        $or: [
+          { nombre: { $regex: term, $options: 'i' } },
+          { appaterno: { $regex: term, $options: 'i' } },
+          { apmaterno: { $regex: term, $options: 'i' } },
+          { carnet: { $regex: term, $options: 'i' } },
+          { rude: { $regex: term, $options: 'i' } },
+          { 'gestiones.curso': { $regex: term, $options: 'i' } },
+          { 'gestiones.nivel': { $regex: term, $options: 'i' } },
+        ],
+      }))
+    }
+
+    // Contar total de coincidencias
+    const total = await Estudiante.countDocuments(filter)
+
+    // Obtener solo los registros de la página actual
+    const estudiantes = await Estudiante.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    return res.json({
+      total,
+      pagina: page,
+      limite: limit,
+      data: estudiantes,
+    })
+  } catch (err) {
+    next(err)
+  }
+}
