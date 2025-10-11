@@ -1,3 +1,5 @@
+SCRIPTS PARA EL SISTEMA
+
 Inicializar proyecto, borra base de datos y crea usuario principal
 npx ts-node scripts/setup.ts
 
@@ -6,3 +8,5 @@ pnpm run add:user
 
 Script para crear tabla de condicion base
 pnpm init-condicion-base
+
+
