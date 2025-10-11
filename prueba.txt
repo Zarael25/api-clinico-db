@@ -5,3 +5,4 @@ Crear usuarios
 pnpm run add:user
 
 Script para crear tabla de condicion base
+pnpm init-condicion-base
