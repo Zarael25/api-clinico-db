@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "copy-fonts": "mkdir -p dist/fonts && cp -r src/fonts/* dist/fonts/",
     "format": "prettier --write .",
     "lint": "tsc --noEmit && eslint \"src/**/*.ts*\"",
     "start": "node dist/server.js",
