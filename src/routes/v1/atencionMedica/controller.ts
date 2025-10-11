@@ -130,47 +130,73 @@ export const getAtencionById = async (req: Request, res: Response, next: NextFun
 }
 
 
-// ------------------ Atenciones por Fecha ------------------
+// ------------------ Atenciones por Fecha (filtradas por niveles) ------------------
 export const getAtencionesByFecha = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { fecha } = req.query 
+    const { fecha } = req.query;
 
     if (!fecha) {
-      return res.status(400).json({ message: 'Debe enviar una fecha en formato YYYY-MM-DD' })
+      return res.status(400).json({ message: 'Debe enviar una fecha en formato YYYY-MM-DD' });
     }
 
-    // Construir rango de fechas
-    const inicio = new Date(`${fecha}T00:00:00-04:00`)
-    const fin = new Date(`${fecha}T23:59:59-04:00`)
+    // Construir rango de fechas del día
+    const inicio = new Date(`${fecha}T00:00:00-04:00`);
+    const fin = new Date(`${fecha}T23:59:59-04:00`);
 
-    const atenciones = await AtencionMedica.find({
-      fecha: { $gte: inicio, $lte: fin }
-    })
+    // Obtener usuario autenticado
+    const user = req.user as any;
+    const nivelesUsuario: string[] = user?.niveles || [];
+    const rolesUsuario: string[] = user?.roles || [];
+
+    // Filtro base por fecha
+    const filtroAtencion: any = {
+      fecha: { $gte: inicio, $lte: fin },
+    };
+
+    // 1️⃣ Buscar todas las atenciones del día
+    const atenciones = await AtencionMedica.find(filtroAtencion)
       .populate('user', 'nombre correo')
       .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
       .lean()
-      .exec()
+      .exec();
 
-    // Obtener estudiantes relacionados
-    const idsEstudiantes = atenciones.map(a => a.estudiante).filter(Boolean)
-    const estudiantes = await Estudiante.find({ _id: { $in: idsEstudiantes } })
+    if (atenciones.length === 0) {
+      return res.json([]);
+    }
+
+    // 2️⃣ Obtener los estudiantes involucrados en esas atenciones
+    const idsEstudiantes = atenciones.map((a) => a.estudiante).filter(Boolean);
+
+    // 3️⃣ Construir filtro de estudiantes
+    const filtroEstudiantes: any = { _id: { $in: idsEstudiantes } };
+
+    // Si el usuario no es admin, filtrar por niveles
+    if (!rolesUsuario.includes('admin') && nivelesUsuario.length > 0) {
+      filtroEstudiantes['gestiones.nivel'] = { $in: nivelesUsuario };
+    }
+
+    // 4️⃣ Buscar los estudiantes accesibles
+    const estudiantes = await Estudiante.find(filtroEstudiantes)
       .select('nombre appaterno apmaterno carnet rude tutores gestiones')
-      .lean()
+      .lean();
 
+    // 5️⃣ Mapear estudiantes accesibles
+    const estudiantesMap = new Map(estudiantes.map((e) => [String(e._id), e]));
 
-    // Construir resultado con datos completos de estudiantes
-    const estudiantesMap = new Map(estudiantes.map(e => [String(e._id), e]))
+    // 6️⃣ Armar respuesta final (solo atenciones cuyos estudiantes son visibles)
+    const resultado = atenciones
+      .filter((a) => estudiantesMap.has(String(a.estudiante)))
+      .map((a) => ({
+        ...a,
+        estudiante: estudiantesMap.get(String(a.estudiante)) || null,
+      }));
 
-    const resultado = atenciones.map(a => ({
-      ...a,
-      estudiante: estudiantesMap.get(String(a.estudiante)) || null
-    }))
-
-    res.json(resultado)
+    return res.json(resultado);
   } catch (err) {
-    next(err)
+    next(err);
   }
-}
+};
+
 
 
 // ------------------ Configuración PDF ------------------
