@@ -4,7 +4,7 @@
   "description": "API-REST: para la gestión clínica para la Unidad Educativa Don Bosco Sucre",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-fonts",
     "copy-fonts": "mkdir -p dist/fonts && cp -r src/fonts/* dist/fonts/",
     "format": "prettier --write .",
     "lint": "tsc --noEmit && eslint \"src/**/*.ts*\"",
