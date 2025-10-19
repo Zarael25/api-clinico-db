@@ -8,6 +8,7 @@ import condicionBase from './condicionBase'
 import atencionMedica from './atencionMedica'
 import medicamentos from './medicamentos'
 import tutores from './tutores'
+import dashboard from './dashboard'
 
 const v1: Router = express.Router()
 v1.use(cors()) 
@@ -19,5 +20,6 @@ v1.use('/condicion-base', condicionBase)
 v1.use('/atenciones', atencionMedica)
 v1.use('/medicamentos', medicamentos)
 v1.use('/tutores', tutores)
+v1.use('/dashboard', dashboard)
 
 export default v1
