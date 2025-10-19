@@ -373,3 +373,122 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
     next(err)
   }
 }
+
+// ------------------ Generar Reporte de Estudiante ------------------
+export const generarReporteEstudiantePDF = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { estudianteId } = req.params
+
+    // Obtener datos del estudiante
+    const estudiante = await Estudiante.findById(estudianteId)
+      .select('nombre appaterno apmaterno curso nivel gestiones')
+      .lean()
+
+    if (!estudiante) {
+      return res.status(404).json({ message: 'Estudiante no encontrado' })
+    }
+
+    // Obtener todas las atenciones médicas del estudiante
+    const atenciones = await AtencionMedica.find({ estudiante: estudianteId })
+      .populate('user', 'nombre correo')
+      .populate('medicamentosAdministrados.medicamento', 'nombre_comercial presentacion')
+      .sort({ fecha: -1 })
+      .lean()
+
+    if (atenciones.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron atenciones para este estudiante' })
+    }
+
+    // ---------------- Construcción del cuerpo de la tabla ----------------
+    const body: any[] = []
+    body.push([
+      { text: 'Fecha', style: 'tableHeader' },
+      { text: 'Motivo de Consulta', style: 'tableHeader' },
+      { text: 'Diagnóstico', style: 'tableHeader' },
+      { text: 'Medicamentos', style: 'tableHeader' },
+      { text: 'Profesional', style: 'tableHeader' },
+    ])
+
+    atenciones.forEach(a => {
+      const fecha = new Date(a.fecha).toLocaleDateString('es-BO')
+      const motivo = a.motivo_consulta || '—'
+      const diagnostico = a.diagnostico || '—'
+      const profesional = (a.user as any)?.nombre || '—'
+
+      const meds = Array.isArray(a.medicamentosAdministrados)
+        ? a.medicamentosAdministrados.map(m => {
+            const med = m.medicamento as any
+            return med?.nombre_comercial || '—'
+          })
+        : []
+
+      body.push([fecha, motivo, diagnostico, meds.join(', ') || '—', profesional])
+    })
+
+    // ---------------- Definición del documento PDF ----------------
+    const docDefinition: any = {
+      pageSize: 'LETTER',
+      pageMargins: [30, 40, 30, 40],
+
+      content: [
+        // Encabezado institucional
+        { text: 'COLEGIO DON BOSCO SUCRE', style: 'institucion' },
+        { text: 'Departamento Médico - Reporte de Atenciones', style: 'header' },
+        { text: '\n' },
+
+        // Datos del estudiante
+        {
+          columns: [
+            { text: `Estudiante: ${estudiante.nombre} ${estudiante.appaterno ?? ''} ${estudiante.apmaterno ?? ''}`, style: 'info' },
+            { text: `Nivel: ${estudiante.gestiones?.[0]?.nivel ?? '—'}`, style: 'info', alignment: 'right' },
+          ],
+        },
+        {
+          columns: [
+            { text: `Curso: ${estudiante.gestiones?.[0]?.curso ?? '—'}`, style: 'info' },
+            { text: `Total de Atenciones: ${atenciones.length}`, style: 'info', alignment: 'right' },
+          ],
+        },
+        { text: '\n' },
+
+        // Tabla de atenciones
+        { text: 'Historial de Atenciones', style: 'section' },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', '*', '*', '*', 'auto'],
+            body,
+          },
+          layout: 'lightHorizontalLines',
+        },
+
+        // --- Firma del profesional (única) ---
+        { text: '\n\n\n\n\n\n' },
+        { text: '_________________________', alignment: 'center' },
+        { text: 'Firma del Profesional', alignment: 'center', margin: [0, 5, 0, 0] },
+      ],
+
+      styles: {
+        institucion: { fontSize: 12, bold: true, alignment: 'center' },
+        header: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 0, 0, 10] },
+        section: { fontSize: 12, bold: true, margin: [0, 10, 0, 5] },
+        info: { fontSize: 10 },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+      },
+
+      defaultStyle: {
+        font: 'Roboto',
+        fontSize: 9,
+      },
+    }
+
+    // ---------------- Generar y enviar el PDF ----------------
+    const pdfDoc = printer.createPdfKitDocument(docDefinition)
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename=reporte_${estudiante.nombre}.pdf`)
+    pdfDoc.pipe(res)
+    pdfDoc.end()
+  } catch (err) {
+    next(err)
+  }
+}

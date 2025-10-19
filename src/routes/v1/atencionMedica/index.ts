@@ -23,6 +23,7 @@ import {
   getAtencionById,
   getAtencionesByFecha,
   generarReportePDF,
+  generarReporteEstudiantePDF,
 } from './controller'
 
 
@@ -64,6 +65,13 @@ atencionMedica.get(
   '/reporte/pdf',
   passport.authenticate('jwt', { session: false }),
   generarReportePDF
+)
+
+// ------------------ Generar Reporte PDF por Estudiante ------------------
+atencionMedica.get(
+  '/reporte/estudiante/:estudianteId',
+  passport.authenticate('jwt', { session: false }),
+  generarReporteEstudiantePDF
 )
 
 
