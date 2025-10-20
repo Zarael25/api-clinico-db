@@ -3,19 +3,31 @@ import AtencionMedica from '../../../database/models/AtencionMedica'
 import Estudiante from '../../../database/models/Estudiante'
 
 // ------------------ Obtener Resumen del Dashboard Clínico ------------------
-export const getDashboardResumen = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getDashboardResumen = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const ahora = new Date()
-    const anioActual = ahora.getFullYear()
+    // 🔹 Calcular hora actual con offset de Bolivia (UTC-4)
+    const ahoraUTC = new Date()
+    const ahoraBolivia = new Date(ahoraUTC.getTime() - 4 * 60 * 60 * 1000)
 
-    const inicioAnio = new Date(anioActual, 0, 1)
-    const finAnio = new Date(anioActual, 11, 31, 23, 59, 59)
-    const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
-    const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59)
+    const anioActual = ahoraBolivia.getFullYear()
+
+    // 🔹 Definir rangos de fechas considerando zona horaria de Bolivia
+    const inicioAnio = new Date(Date.UTC(anioActual, 0, 1, 4, 0, 0)) // 00:00 Bolivia = 04:00 UTC
+    const finAnio = new Date(Date.UTC(anioActual, 11, 31, 27, 59, 59)) // 23:59 Bolivia = 03:59 UTC del siguiente día
+
+    const inicioHoy = new Date(Date.UTC(
+      ahoraBolivia.getFullYear(),
+      ahoraBolivia.getMonth(),
+      ahoraBolivia.getDate(),
+      4, 0, 0 // 00:00 hora Bolivia
+    ))
+
+    const finHoy = new Date(Date.UTC(
+      ahoraBolivia.getFullYear(),
+      ahoraBolivia.getMonth(),
+      ahoraBolivia.getDate(),
+      27, 59, 59 // 23:59 hora Bolivia
+    ))
 
     // 1️⃣ Total de atenciones del año
     const atencionesTotales = await AtencionMedica.countDocuments({
@@ -41,12 +53,11 @@ export const getDashboardResumen = async (
       fecha: { $gte: inicioAnio, $lte: finAnio },
     })
 
-    // 5️⃣ Atenciones de hoy
+    // 5️⃣ Atenciones de hoy (ajustado a zona Bolivia)
     const atencionesHoy = await AtencionMedica.countDocuments({
       fecha: { $gte: inicioHoy, $lte: finHoy },
     })
 
-    // Enviar el resumen
     res.json({
       atencionesTotales,
       estudiantesAtendidos: estudiantesAtendidos.length,
@@ -58,6 +69,7 @@ export const getDashboardResumen = async (
     next(err)
   }
 }
+
 
 
 // ------------------ Obtener Atenciones por Nivel ------------------
