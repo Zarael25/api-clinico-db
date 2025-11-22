@@ -163,7 +163,7 @@ export const searchEstudiantesPaginated = async (req: Request, res: Response, ne
         const upper = term.toUpperCase();
 
         // nivel exacto
-        if (["SM", "PT", "ST", "TC", "IN"].includes(upper)) {
+        if (["SM", "PT", "ST", "PM"].includes(upper)) {
           return { "gestiones.nivel": upper };
         }
 
