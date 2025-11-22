@@ -325,7 +325,7 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
     // ---------------- Definición del documento PDF ----------------
     const docDefinition: any = {
       pageSize: 'LETTER',
-      pageMargins: [30, 40, 30, 40],
+      pageMargins: [15, 40, 15, 40],
 
       content: [
         { text: 'Reporte de Atenciones Médicas', style: 'header' },
@@ -336,11 +336,12 @@ export const generarReportePDF = async (req: Request, res: Response, next: NextF
           table: {
             headerRows: 1,
             
-            widths: ['auto', 'auto', 80, 'auto', 'auto', '*', '*', '*', 'auto'],
+            widths: [10, 45, 70, 25, 20, 70, 70, 80, 60],
             body,
           },
           layout: 'lightHorizontalLines',
           fontSize: 8,
+          dontBreakRows: true,
         },
         { text: '\n' },
         { text: 'Medicamentos Utilizados', style: 'section' },
